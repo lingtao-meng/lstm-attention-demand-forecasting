@@ -4,19 +4,12 @@ LSTM + Attention 零售需求预测 — Streamlit Web App
 import streamlit as st
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 from sklearn.preprocessing import StandardScaler
+import plotly.graph_objects as go
 import warnings
 warnings.filterwarnings('ignore')
-
-import warnings
-warnings.filterwarnings('ignore')
-
-# Matplotlib style (English labels for cross-platform compatibility)
-plt.rcParams['axes.unicode_minus'] = False
-plt.rcParams['figure.facecolor'] = 'white'
 
 # ── Page config ──
 st.set_page_config(
@@ -148,27 +141,63 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader(f"📈 门店 {store} — 销售趋势与预测")
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-
     # Historical (last 24 weeks)
-    hist_sales = store_df['Weekly_Sales'].values[-24:] / 1e6
-    ax.plot(range(-23, 1), hist_sales, 'b-', linewidth=2, label='Historical Sales', marker='o', markersize=4)
+    hist_sales = (store_df['Weekly_Sales'].values[-24:] / 1e6)
+    hist_weeks = list(range(-23, 1))
+    hist_dates = store_df['Date'].dt.strftime('%m/%d').values[-24:]
 
     # Forecast
     forecast_p50 = pred_original[:, 1] / 1e6
     forecast_p10 = pred_original[:, 0] / 1e6
     forecast_p90 = pred_original[:, 2] / 1e6
-    ax.plot(range(1, 5), forecast_p50, 'r-o', linewidth=2, markersize=8, label='P50 Forecast')
-    ax.fill_between(range(1, 5), forecast_p10, forecast_p90,
-                     alpha=0.3, color='red', label='P10-P90 Interval')
-    ax.axvline(x=0, color='gray', linestyle='--', alpha=0.5, label='Now')
+    forecast_weeks = list(range(1, 5))
 
-    ax.set_xlabel('Week (0 = current, positive = forecast)')
-    ax.set_ylabel('Weekly Sales (Million $)')
-    ax.set_title(f'Store {store} — 4-Week Demand Forecast', fontsize=13, fontweight='bold')
-    ax.legend(loc='upper left')
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
+    fig = go.Figure()
+
+    # Historical line
+    fig.add_trace(go.Scatter(
+        x=hist_weeks, y=hist_sales,
+        mode='lines+markers', name='Historical Sales',
+        line=dict(color='#2196F3', width=2),
+        marker=dict(size=5),
+        hovertemplate='Week %{x}<br>Sales: $%{y:.2f}M<extra></extra>'
+    ))
+
+    # P10-P90 band
+    fig.add_trace(go.Scatter(
+        x=forecast_weeks + forecast_weeks[::-1],
+        y=list(forecast_p90) + list(forecast_p10)[::-1],
+        fill='toself', fillcolor='rgba(255,0,0,0.15)',
+        line=dict(color='rgba(255,0,0,0)'),
+        name='P10-P90 Interval',
+        hoverinfo='skip'
+    ))
+
+    # P50 forecast line
+    fig.add_trace(go.Scatter(
+        x=forecast_weeks, y=forecast_p50,
+        mode='lines+markers', name='P50 Forecast',
+        line=dict(color='#F44336', width=2.5),
+        marker=dict(size=9, symbol='diamond'),
+        hovertemplate='Week +%{x}<br>P50: $%{y:.2f}M<br>P10: $%{customdata[0]:.2f}M<br>P90: $%{customdata[1]:.2f}M<extra></extra>',
+        customdata=list(zip(forecast_p10, forecast_p90))
+    ))
+
+    # Now line
+    fig.add_vline(x=0, line_dash='dash', line_color='gray', opacity=0.5,
+                  annotation_text='Now', annotation_position='top left')
+
+    fig.update_layout(
+        xaxis_title='Week (0 = current, positive = forecast)',
+        yaxis_title='Weekly Sales (Million $)',
+        title=f'Store {store} — 4-Week Demand Forecast',
+        hovermode='x unified',
+        template='plotly_white',
+        height=450,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 with col2:
     st.subheader("📋 预测详情")
@@ -201,16 +230,23 @@ if show_attn:
     attn_matrix = attn_weights[0].cpu().numpy()
     avg_attn = attn_matrix.mean(axis=0)
 
-    fig2, ax2 = plt.subplots(figsize=(8, 4))
     weeks_labels = [f'{LOOKBACK-i}w ago' for i in range(LOOKBACK)]
-    colors = ['#2196F3' if v > avg_attn.mean() else '#BBDEFB' for v in avg_attn]
-    ax2.barh(range(LOOKBACK), avg_attn, color=colors)
-    ax2.set_yticks(range(LOOKBACK))
-    ax2.set_yticklabels(weeks_labels)
-    ax2.set_xlabel('Attention Weight')
-    ax2.set_title(f'Store {store} — Attention Weights by Time Step', fontsize=12, fontweight='bold')
-    ax2.invert_yaxis()
-    st.pyplot(fig2)
+    colors = ['#2196F3' if v > avg_attn.mean() else '#90CAF9' for v in avg_attn]
+
+    fig2 = go.Figure()
+    fig2.add_trace(go.Bar(
+        y=weeks_labels, x=avg_attn,
+        orientation='h', marker_color=colors,
+        hovertemplate='%{y}: %{x:.4f}<extra></extra>'
+    ))
+    fig2.update_layout(
+        xaxis_title='Attention Weight',
+        title=f'Store {store} — Attention Weights by Time Step',
+        template='plotly_white',
+        height=350,
+        margin=dict(l=20, r=20, t=40, b=20)
+    )
+    st.plotly_chart(fig2, use_container_width=True)
 
     top_weeks = np.argsort(avg_attn)[::-1][:3]
     st.caption(f"📌 Top 3 most attended weeks: {', '.join([f'{LOOKBACK-w}w ago' for w in top_weeks])}")
