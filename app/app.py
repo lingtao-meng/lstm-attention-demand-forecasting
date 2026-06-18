@@ -11,6 +11,13 @@ from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
 
+import warnings
+warnings.filterwarnings('ignore')
+
+# Matplotlib style (English labels for cross-platform compatibility)
+plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['figure.facecolor'] = 'white'
+
 # ── Page config ──
 st.set_page_config(
     page_title="零售需求预测 | LSTM + Attention",
@@ -145,20 +152,20 @@ with col1:
 
     # Historical (last 24 weeks)
     hist_sales = store_df['Weekly_Sales'].values[-24:] / 1e6
-    ax.plot(range(-23, 1), hist_sales, 'b-', linewidth=2, label='历史销售额', marker='o', markersize=4)
+    ax.plot(range(-23, 1), hist_sales, 'b-', linewidth=2, label='Historical Sales', marker='o', markersize=4)
 
     # Forecast
     forecast_p50 = pred_original[:, 1] / 1e6
     forecast_p10 = pred_original[:, 0] / 1e6
     forecast_p90 = pred_original[:, 2] / 1e6
-    ax.plot(range(1, 5), forecast_p50, 'r-o', linewidth=2, markersize=8, label='P50 预测')
+    ax.plot(range(1, 5), forecast_p50, 'r-o', linewidth=2, markersize=8, label='P50 Forecast')
     ax.fill_between(range(1, 5), forecast_p10, forecast_p90,
-                     alpha=0.3, color='red', label='P10-P90 区间')
-    ax.axvline(x=0, color='gray', linestyle='--', alpha=0.5, label='当前时间')
+                     alpha=0.3, color='red', label='P10-P90 Interval')
+    ax.axvline(x=0, color='gray', linestyle='--', alpha=0.5, label='Now')
 
-    ax.set_xlabel('周（0 = 当前，正值 = 预测）')
-    ax.set_ylabel('周销售额（百万美元）')
-    ax.set_title(f'门店 {store} — 未来4周需求预测', fontsize=13, fontweight='bold')
+    ax.set_xlabel('Week (0 = current, positive = forecast)')
+    ax.set_ylabel('Weekly Sales (Million $)')
+    ax.set_title(f'Store {store} — 4-Week Demand Forecast', fontsize=13, fontweight='bold')
     ax.legend(loc='upper left')
     ax.grid(True, alpha=0.3)
     st.pyplot(fig)
@@ -195,18 +202,18 @@ if show_attn:
     avg_attn = attn_matrix.mean(axis=0)
 
     fig2, ax2 = plt.subplots(figsize=(8, 4))
-    weeks_labels = [f'{LOOKBACK-i}周前' for i in range(LOOKBACK)]
+    weeks_labels = [f'{LOOKBACK-i}w ago' for i in range(LOOKBACK)]
     colors = ['#2196F3' if v > avg_attn.mean() else '#BBDEFB' for v in avg_attn]
     ax2.barh(range(LOOKBACK), avg_attn, color=colors)
     ax2.set_yticks(range(LOOKBACK))
     ax2.set_yticklabels(weeks_labels)
-    ax2.set_xlabel('注意力权重')
-    ax2.set_title(f'门店 {store} — 不同历史时间步的重要性', fontsize=12, fontweight='bold')
+    ax2.set_xlabel('Attention Weight')
+    ax2.set_title(f'Store {store} — Attention Weights by Time Step', fontsize=12, fontweight='bold')
     ax2.invert_yaxis()
     st.pyplot(fig2)
 
     top_weeks = np.argsort(avg_attn)[::-1][:3]
-    st.caption(f"📌 最受关注的3个时间步：{', '.join([f'{LOOKBACK-w}周前' for w in top_weeks])}")
+    st.caption(f"📌 Top 3 most attended weeks: {', '.join([f'{LOOKBACK-w}w ago' for w in top_weeks])}")
 
 # ── Footer ──
 st.markdown("---")
