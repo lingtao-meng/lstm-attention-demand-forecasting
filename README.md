@@ -59,10 +59,11 @@ tft-demand-forecasting/
 │   ├── eda_external_features.png      # 外部特征分析
 │   ├── eda_correlation.png            # 特征相关性热力图
 │   ├── lstm_forecast_results.png      # 训练曲线、预测对比、误差分布
-│   └── lstm_attention_weights.png     # 注意力权重可视化
-├── models/
-│   └── best_lstm_attention.pt         # 训练好的模型权重
+│   ├── lstm_attention_weights.png     # 注意力权重可视化
+│   └── lstm_forecast_results.png       # 预测结果对比
 └── requirements.txt
+
+> 运行 notebook 后会自动生成 `models/` 目录，包含训练好的模型权重（best_lstm_attention.pt）。
 ```
 
 ## 🔧 快速开始
