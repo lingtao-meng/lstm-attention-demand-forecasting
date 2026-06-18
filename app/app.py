@@ -54,40 +54,33 @@ class LSTMAttentionForecaster(nn.Module):
         return out.view(-1, self.horizon, self.num_quantiles), attn_weights
 
 
-# ── Load model ──
+# ── Paths: works on both local dev and Streamlit Cloud ──
+import os, urllib.request
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(SCRIPT_DIR)  # go up from app/ to repo root
+DATA_PATH = os.path.join(REPO_DIR, 'data', 'Walmart.csv')
+MODEL_DIR = os.path.join(REPO_DIR, 'models')
+MODEL_PATH = os.path.join(MODEL_DIR, 'best_lstm_attention.pt')
 MODEL_URL = "https://github.com/lingtao-meng/lstm-attention-demand-forecasting/releases/download/v1.0/best_lstm_attention.pt"
 
+# ── Load model ──
 @st.cache_resource
 def load_model():
-    import os, urllib.request
-
     device = torch.device('cpu')
     model = LSTMAttentionForecaster(input_dim=len(FEATURE_COLS))
 
-    # Try local paths first
-    found = False
-    for path in ['models/best_lstm_attention.pt', '../models/best_lstm_attention.pt']:
-        if os.path.exists(path):
-            model.load_state_dict(torch.load(path, map_location=device, weights_only=True))
-            found = True
-            break
-
-    # If not found, download from GitHub Release
-    if not found:
-        os.makedirs('../models', exist_ok=True)
+    if os.path.exists(MODEL_PATH):
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
+    else:
+        os.makedirs(MODEL_DIR, exist_ok=True)
         st.info("⏳ 首次运行，正在下载模型文件（约3.3MB）...")
-
-        # Progress bar during download
         progress = st.progress(0)
-
         def report_progress(block_num, block_size, total_size):
             if total_size > 0:
-                pct = min(block_num * block_size / total_size, 1.0)
-                progress.progress(pct)
-
-        urllib.request.urlretrieve(MODEL_URL, '../models/best_lstm_attention.pt', reporthook=report_progress)
+                progress.progress(min(block_num * block_size / total_size, 1.0))
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH, reporthook=report_progress)
         progress.progress(1.0)
-        model.load_state_dict(torch.load('../models/best_lstm_attention.pt', map_location=device, weights_only=True))
+        model.load_state_dict(torch.load(MODEL_PATH, map_location=device, weights_only=True))
         st.success("✅ 模型下载完成！")
 
     model.to(device)
@@ -97,7 +90,7 @@ def load_model():
 # ── Load data ──
 @st.cache_data
 def load_data():
-    df = pd.read_csv('../data/Walmart.csv')
+    df = pd.read_csv(DATA_PATH)
     df['Date'] = pd.to_datetime(df['Date'], dayfirst=True)
     df = df.sort_values(['Store', 'Date']).reset_index(drop=True)
     df['Store'] = df['Store'].astype(int)
