@@ -55,17 +55,41 @@ class LSTMAttentionForecaster(nn.Module):
 
 
 # ── Load model ──
+MODEL_URL = "https://github.com/lingtao-meng/lstm-attention-demand-forecasting/releases/download/v1.0/best_lstm_attention.pt"
+
 @st.cache_resource
 def load_model():
+    import os, urllib.request
+
     device = torch.device('cpu')
     model = LSTMAttentionForecaster(input_dim=len(FEATURE_COLS))
-    # Try both local and deployed paths
+
+    # Try local paths first
+    found = False
     for path in ['models/best_lstm_attention.pt', '../models/best_lstm_attention.pt']:
-        try:
+        if os.path.exists(path):
             model.load_state_dict(torch.load(path, map_location=device, weights_only=True))
+            found = True
             break
-        except FileNotFoundError:
-            continue
+
+    # If not found, download from GitHub Release
+    if not found:
+        os.makedirs('../models', exist_ok=True)
+        st.info("⏳ 首次运行，正在下载模型文件（约3.3MB）...")
+
+        # Progress bar during download
+        progress = st.progress(0)
+
+        def report_progress(block_num, block_size, total_size):
+            if total_size > 0:
+                pct = min(block_num * block_size / total_size, 1.0)
+                progress.progress(pct)
+
+        urllib.request.urlretrieve(MODEL_URL, '../models/best_lstm_attention.pt', reporthook=report_progress)
+        progress.progress(1.0)
+        model.load_state_dict(torch.load('../models/best_lstm_attention.pt', map_location=device, weights_only=True))
+        st.success("✅ 模型下载完成！")
+
     model.to(device)
     model.eval()
     return model
