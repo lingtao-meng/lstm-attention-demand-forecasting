@@ -1,5 +1,8 @@
 # LSTM + Attention 需求预测
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/)
+
+
 用 Walmart 零售数据训练了一个 LSTM 加 Self-Attention 的深度学习模型，做未来 4 周的销售预测。纯 PyTorch 手写的，没用高层 API。
 
 另外还部署了一个 Streamlit 网页应用，可以直接选门店看预测结果。
