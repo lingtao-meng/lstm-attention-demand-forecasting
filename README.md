@@ -7,7 +7,7 @@
 
 另外还部署了一个 Streamlit 网页应用，可以直接选门店看预测结果。
 
-在线应用：[点击试用](https://lstm-attention-demand-forecasting-bxj7ppl5rqqf9wbe8uoney.streamlit.app)
+在线应用：[点击试用](https://lstm-attention-demand-forecasting-94s4zjmdvbzoar6sqh5zqx.streamlit.app)
 
 ## 数据
 
