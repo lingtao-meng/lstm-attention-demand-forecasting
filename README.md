@@ -68,6 +68,53 @@ MAE 降了 37.9%，然后呢？计划岗真正关心的是这一步——**误�
 
 复现：`python scripts/forecast_to_inventory.py --improvement 0.379`
 
+## 预测值不值：FVA 与 newsvendor
+
+MAE 降 37.9% 是对 naive 讲的。但 naive 不是最强基准：在同一 holdout 窗口上，
+4 周移动平均（MA4）和 seasonal naive 都可能更强。所以先做两件事。
+
+### 1. FVA：基准选错，结论会虚高
+
+![FVA](images/fva_tracking.png)
+
+固定最后 26 周（45 店 × 26 周），只用可复现的美元空间基准：
+
+| 模型 | MAE | FVA vs naive | 偏差 | 中位跟踪信号 | \|TS\|>4 |
+|---|---|---|---|---|---|
+| **MA4** | **47,554** | **+6.5%** | +0.01% | 0.31 | 7/45 |
+| naive | 50,865 | 0 | +0.15% | 0.63 | 0/45 |
+| seasonal naive | 54,031 | −6.2% | +2.03% | 18.07 | 43/45 |
+
+- **MA4 才是最强简单基准**；seasonal naive 在这 26 周反而比 naive 差 6.2%，而且 43/45 家店
+  \|TS\| > 4，说明它是系统性有偏的（全窗口上它更好，是窗口效应，不能直接搬到部署）。
+- 项目里 LSTM 的 37.9% 是**标准化空间、相对 naive** 的降幅；如果拿它直接当「对最强基准的 FVA」，
+  会高估。README 里近似的 $34,852 若只作量级参考，对 MA4 的 FVA 约 26.7%——但该美元值不可直接比，
+  正式引用仍用 37.9%（标准化空间）。
+- 结论：**FVA 的分母应该是 MA4，不是 naive**；报告 FVA 时必须同时写评估窗口和基准。
+
+### 2. Newsvendor：误差分布形状也值钱
+
+![newsvendor](images/newsvendor.png)
+
+给定缺货成本 Cu = 0.30、持有成本 Co = 0.25，临界比 CR = Cu/(Cu+Co) = 0.545；
+最优订货量 = 预测 + 误差分布的 CR 分位数。
+
+| 方法 | 期望成本（$/店-周） | 相对经验分位 |
+|---|---|---|
+| 经验分位数（MA4 误差） | **$12,666** | — |
+| 正态近似 | $12,975 | +2.4% |
+| 误差缩减 37.9% 后 | **$7,866** | **−37.9%** |
+
+- 误差分布厚尾/偏斜，**经验分位数比正态近似更稳**（正态多花 2.4%）。
+- 服务水平从 80% 提到 95%，成本从 $15.9k 涨到 $23.0k；0.8 之后边际成本陡增。
+- 预测误差下降会**线性**传导到 newsvendor 成本——这和安全库存的口径一致，但 newsvendor
+  把缺货成本显式写出来了。
+
+```bash
+python scripts/forecast_diagnostics.py
+python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
+```
+
 ## 一些踩过的坑
 
 最初打算用 Google 的 Temporal Fusion Transformer（TFT），结果 pytorch-forecasting 和 pytorch-lightning 的版本冲突搞了很久没搞定。最后放弃了，直接用 PyTorch 从零写 LSTM+Attention。回头看这个决定反而是对的——手写一遍对底层理解深了很多。
@@ -79,6 +126,9 @@ MAE 降了 37.9%，然后呢？计划岗真正关心的是这一步——**误�
 ```bash
 pip install torch pandas numpy matplotlib seaborn scikit-learn streamlit
 jupyter notebook lstm_demand_forecast.ipynb
+
+# 预测诊断：FVA + tracking signal + newsvendor
+python scripts/forecast_diagnostics.py
 
 # Streamlit app
 cd app && streamlit run app.py
