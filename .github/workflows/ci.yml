@@ -18,12 +18,21 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas numpy scipy
+          pip install pandas numpy scipy matplotlib
 
       - name: Forecast error -> safety stock -> holding cost
         run: python scripts/forecast_to_inventory.py
+
+      - name: Forecast diagnostics (FVA + newsvendor)
+        run: python scripts/forecast_diagnostics.py
+
+      - name: Diagnostics tests
+        run: python tests/test_forecast_diagnostics.py
 
       - name: Check outputs
         run: |
           test -f results/summary.md
           test -f results/forecast_to_inventory_per_store.csv
+          test -f results/forecast_diagnostics.json
+          test -f images/fva_tracking.png
+          test -f images/newsvendor.png

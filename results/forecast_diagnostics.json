@@ -1,0 +1,84 @@
+{
+  "holdout_weeks": 26,
+  "stores": 45,
+  "best_benchmark": "ma4",
+  "critical_ratio": 0.5454545454545454,
+  "underage": 0.3,
+  "overage": 0.25,
+  "improvement_scenario": 0.379,
+  "models": [
+    {
+      "model": "ma4",
+      "mae": 47554.027365384616,
+      "rmse": 68366.61404828253,
+      "bias": 111.48313888889224,
+      "bias_pct": 0.00010702431811841766,
+      "median_ts": 0.3123249777358405,
+      "biased_stores": 7,
+      "stores": 45,
+      "fva_vs_naive": 0.06509254555620247,
+      "fva_vs_best": 0.0
+    },
+    {
+      "model": "naive",
+      "mae": 50864.95688888889,
+      "rmse": 76052.98625944629,
+      "bias": 1561.8097435897448,
+      "bias_pct": 0.00149934442557257,
+      "median_ts": 0.631506228479227,
+      "biased_stores": 0,
+      "stores": 45,
+      "fva_vs_naive": 0.0,
+      "fva_vs_best": -0.0696245871682859
+    },
+    {
+      "model": "seasonal",
+      "mae": 54031.40496581196,
+      "rmse": 81785.53326083826,
+      "bias": 21113.637324786327,
+      "bias_pct": 0.020269187432342503,
+      "median_ts": 18.068892889527067,
+      "biased_stores": 43,
+      "stores": 45,
+      "fva_vs_naive": -0.06225205466781314,
+      "fva_vs_best": -0.13621091544272312
+    }
+  ],
+  "newsvendor": {
+    "cost_empirical": 12666.22148491647,
+    "cost_normal": 12975.44706904806,
+    "cost_model": 7865.723542133129,
+    "normal_over_empirical": 0.024413404147387574,
+    "model_saving_vs_empirical": 0.3789999999999999
+  },
+  "frontier": [
+    {
+      "service_level": 0.5,
+      "expected_cost": 12742.744110630341
+    },
+    {
+      "service_level": 0.6,
+      "expected_cost": 12736.616228846155
+    },
+    {
+      "service_level": 0.7,
+      "expected_cost": 13520.874662179487
+    },
+    {
+      "service_level": 0.8,
+      "expected_cost": 15854.161237286326
+    },
+    {
+      "service_level": 0.9,
+      "expected_cost": 19567.418563141026
+    },
+    {
+      "service_level": 0.95,
+      "expected_cost": 23013.359026388887
+    },
+    {
+      "service_level": 0.99,
+      "expected_cost": 29788.80406244659
+    }
+  ]
+}
