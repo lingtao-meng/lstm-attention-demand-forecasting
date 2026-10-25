@@ -84,30 +84,73 @@ def train_model(train: pd.DataFrame, features: list[str], direct: bool = False) 
     return model
 
 
+INK = "#2b2b2b"
+TEAL = "#1f6f78"
+AMBER = "#c9a227"
+RED = "#b23a48"
+MUTED = "#9aa6ad"
+GRID = "#e8e8e8"
+
+
+def _style() -> None:
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update(
+        {
+            "figure.facecolor": "#fbfbf8",
+            "axes.facecolor": "#ffffff",
+            "axes.edgecolor": "#d9d9d9",
+            "axes.grid": True,
+            "grid.color": GRID,
+            "grid.linewidth": 0.8,
+            "font.family": "DejaVu Sans",
+            "axes.titlesize": 11,
+            "axes.titleweight": "bold",
+            "axes.labelsize": 9,
+            "xtick.labelsize": 8,
+            "ytick.labelsize": 8,
+            "legend.frameon": False,
+        }
+    )
+
+
 def plot_examples(preds: pd.DataFrame, weekly: pd.DataFrame, holdout_start, images: Path) -> None:
     import matplotlib
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
+    _style()
     top = preds.groupby("id", observed=True)["sales"].sum().sort_values(ascending=False).head(3).index
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4.0))
-    for ax, series in zip(axes, top):
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.3))
+    for idx, (ax, series) in enumerate(zip(axes, top)):
         history = weekly[weekly["id"] == series].sort_values("week").tail(40)
         forecast = preds[preds["id"] == series].sort_values("week")
-        history_x = history["week"].dt.start_time.dt.strftime("%Y-%m-%d")
-        forecast_x = forecast["week"].dt.start_time.dt.strftime("%Y-%m-%d")
-        ax.plot(history_x, history["sales"], color="#333", linewidth=1.2, label="actual")
-        ax.plot(forecast_x, forecast["naive"], color="#d99a2b", linestyle="--", linewidth=1, label="naive")
-        ax.plot(forecast_x, forecast["lgbm"], color="#1f6f78", linewidth=1.5, label="LightGBM")
-        ax.axvline(len(history) - len(forecast) - 0.5, color="#9b3b3b", linestyle=":", linewidth=1)
-        ax.set_title(series, fontsize=9)
-        ax.set_xticks(range(0, len(history), 4))
-        ax.set_xticklabels(history_x.iloc[::4], rotation=45, ha="right", fontsize=7)
-    axes[0].set_ylabel("weekly units")
-    axes[0].legend(fontsize=7)
-    fig.tight_layout()
-    fig.savefig(images / "forecast_examples.png", dpi=150)
+        n, h = len(history), len(forecast)
+        x = np.arange(n)
+        dates = history["week"].dt.start_time
+        ax.axvspan(n - h - 0.5, n - 0.5, color="#f6efe3", zorder=0)
+        ax.plot(x, history["sales"], color=INK, linewidth=1.8, label="actual")
+        ax.plot(x[-h:], forecast["naive"], color=AMBER, linewidth=1.4, linestyle="--", label="naive")
+        ax.plot(x[-h:], forecast["lgbm"], color=TEAL, linewidth=2.2, label="LightGBM")
+        ax.set_title(series.replace("_validation", ""), fontsize=9, loc="left")
+        step = 4
+        ax.set_xticks(x[::step])
+        ax.set_xticklabels(dates.dt.strftime("%b %d").iloc[::step], fontsize=7)
+        ax.set_ylim(0, max(history["sales"].max(), forecast[["naive", "lgbm"]].max().max()) * 1.1)
+        ax.grid(axis="y")
+        ax.grid(axis="x", visible=False)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+        if idx == 0:
+            ax.set_ylabel("weekly units")
+        if idx == 2:
+            ax.text(n - h, ax.get_ylim()[1] * 0.93, "  holdout", color="#8a6d3b", fontsize=8)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.02), fontsize=8)
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
+    fig.savefig(images / "forecast_examples.png", dpi=160, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -117,22 +160,51 @@ def plot_models(models: pd.DataFrame, images: Path) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 2, figsize=(12.0, 4.0))
+    _style()
+    order = models.sort_values("mae", ascending=True).reset_index(drop=True)
+    display = {"lgbm": "LightGBM", "naive": "naive", "ma4": "MA4", "seasonal": "seasonal"}
+    labels = [display.get(m, m) for m in order["model"]]
+    y = np.arange(len(order))
+    colors = [TEAL if m == "lgbm" else (AMBER if m == "seasonal" else "#a9b4ba") for m in order["model"]]
+    xmax = order["mae"].max()
+
+    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.0), gridspec_kw={"width_ratios": [1.25, 1]})
     ax = axes[0]
-    colors = {"naive": "#9b3b3b", "seasonal": "#d99a2b", "ma4": "#2f5d8c", "lgbm": "#1f6f78"}
-    ax.bar(models["model"], models["mae"], color=[colors.get(m, "#7c8a99") for m in models["model"]])
-    for i, row in enumerate(models.itertuples()):
-        ax.text(i, row.mae * 1.02, f"FVA {row.fva_vs_naive:+.1%}", ha="center", fontsize=8)
-    ax.set_ylabel("MAE (weekly units / series)")
-    ax.set_title("Same 26-week holdout: baselines vs LightGBM")
+    ax.barh(y, order["mae"], color=colors, height=0.58)
+    ax.set_yticks(y, labels)
+    ax.invert_yaxis()
+    for i, row in order.iterrows():
+        ax.text(row["mae"] + xmax * 0.015, i, f"{row['mae']:.1f}", va="center", fontsize=8, color=INK)
+        ax.text(row["mae"] + xmax * 0.13, i, f"FVA {row['fva_vs_naive']:+.1%}", va="center", fontsize=8, color="#5f6b70")
+    ax.set_xlim(0, xmax * 1.38)
+    ax.set_xlabel("MAE (weekly units, lower is better)")
+    ax.set_title("Same 26-week holdout", loc="left")
+    ax.grid(axis="x")
+    ax.grid(axis="y", visible=False)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
 
     ax2 = axes[1]
-    ax2.bar(models["model"], models["bias"], color=[colors.get(m, "#7c8a99") for m in models["model"]])
-    ax2.axhline(0, color="#333", linewidth=0.8)
-    ax2.set_ylabel("mean error (actual − forecast)")
-    ax2.set_title("Bias")
+    ax2.axvline(0, color="#6b6b6b", linewidth=0.8)
+    for i, row in order.iterrows():
+        color = TEAL if row["model"] == "lgbm" else (AMBER if row["model"] == "seasonal" else MUTED)
+        ax2.hlines(i, 0, row["bias"], color=color, linewidth=2.5)
+        ax2.scatter(row["bias"], i, color=color, s=28, zorder=3)
+        offset = 0.18 if row["bias"] >= 0 else -0.18
+        ax2.text(row["bias"] + offset, i, f"{row['bias']:+.2f}", va="center", fontsize=8,
+                 ha="left" if row["bias"] >= 0 else "right", color="#5f6b70")
+    ax2.set_yticks(y, labels)
+    ax2.invert_yaxis()
+    ax2.set_xlim(-3.2, 7.2)
+    ax2.set_xlabel("mean error (actual − forecast)")
+    ax2.set_title("Bias", loc="left")
+    ax2.grid(axis="x")
+    ax2.grid(axis="y", visible=False)
+    for side in ("top", "right"):
+        ax2.spines[side].set_visible(False)
+
     fig.tight_layout()
-    fig.savefig(images / "model_comparison.png", dpi=150)
+    fig.savefig(images / "model_comparison.png", dpi=160, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -141,21 +213,41 @@ def plot_newsvendor(frontier: pd.DataFrame, summary: dict, images: Path) -> None
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.ticker import StrMethodFormatter
 
-    fig, ax = plt.subplots(figsize=(7.2, 4.2))
-    for model, label, color in [
-        (summary["baseline"], "best baseline", "#d99a2b"),
-        ("lgbm", "LightGBM", "#1f6f78"),
-    ]:
-        view = frontier[frontier["model"] == model]
-        ax.plot(view["service_level"] * 100, view["expected_cost"], marker="o", color=color, label=label)
-    ax.axvline(summary["critical_ratio"] * 100, color="#9b3b3b", linestyle="--", linewidth=1, label="critical ratio")
+    _style()
+    base = frontier[frontier["model"] == summary["baseline"]].sort_values("service_level")
+    lgbm = frontier[frontier["model"] == "lgbm"].sort_values("service_level")
+    x = base["service_level"] * 100
+
+    fig, ax = plt.subplots(figsize=(7.6, 4.4))
+    ax.fill_between(x, lgbm["expected_cost"], base["expected_cost"], color=TEAL, alpha=0.12, label="savings")
+    ax.plot(x, base["expected_cost"], color=AMBER, marker="o", markersize=4, linewidth=2, label="best baseline")
+    ax.plot(x, lgbm["expected_cost"], color=TEAL, marker="o", markersize=4, linewidth=2, label="LightGBM")
+    ax.axvline(summary["critical_ratio"] * 100, color=RED, linestyle="--", linewidth=1.2)
+    ax.text(summary["critical_ratio"] * 100 + 1.5, ax.get_ylim()[1] * 0.83,
+            f"CR = {summary['critical_ratio']:.2f}", color=RED, fontsize=8)
+    base_cost = summary["newsvendor"]["baseline_cost"]
+    lgbm_cost = summary["newsvendor"]["lgbm_cost"]
+    ax.annotate(
+        f"\\${base_cost:.2f} → \\${lgbm_cost:.2f}\n(−{summary['newsvendor']['cost_reduction']:.1%})",
+        xy=(50, base_cost),
+        xytext=(55, base_cost + 4),
+        fontsize=8,
+        color="#4a4a4a",
+        arrowprops={"arrowstyle": "-", "color": "#9aa6ad", "lw": 0.8},
+    )
     ax.set_xlabel("cycle service level (%)")
-    ax.set_ylabel("expected newsvendor cost (USD / series-week)")
-    ax.set_title("Cost-service frontier on the same holdout")
-    ax.legend(fontsize=8)
+    ax.set_ylabel("expected cost (USD / series-week)")
+    ax.set_title("Cost-service frontier on the same holdout", loc="left")
+    ax.yaxis.set_major_formatter(StrMethodFormatter("${x:,.0f}"))
+    ax.set_xticks([50, 60, 70, 80, 90, 95, 99])
+    ax.grid(axis="y")
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
-    fig.savefig(images / "newsvendor.png", dpi=150)
+    fig.savefig(images / "newsvendor.png", dpi=160, bbox_inches="tight")
     plt.close(fig)
 
 
