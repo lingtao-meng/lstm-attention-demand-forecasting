@@ -55,7 +55,7 @@ python scripts/download_data.py
 
 ## 结果
 
-### 预测精度
+### 单窗口：26 周 holdout
 
 | 模型 | MAE | RMSE | 偏差 | \|TS\|>4 | FVA vs naive |
 |---|---|---|---|---|---|
@@ -73,24 +73,58 @@ python scripts/download_data.py
 
 ![模型对比](images/model_comparison.png)
 
-模型还是有偏：38/100 家店的 |TS| > 4，中位 TS −2.59。说明它整体上略微低预测，还没到“调好了”的程度。
+模型还是有偏：38/100 家店的 |TS| > 4，中位 TS −2.59。
 
-### Newsvendor
+### 滚动回测：+10.2% 是最好的一折
 
-| 策略 | 期望成本（$/series-week） |
+![滚动回测](images/rolling_backtest.png)
+
+把同样的 100 个 series 走 6 个不重叠的 26 周测试块，每次重新训练：
+
+- FVA 平均 **+5.5% ± 4.2%**，范围 **−1.0% 到 +10.2%**
+- 6 折里 4 折显著优于 naive，1 折显著更差，1 折不显著（Diebold–Mariano，α=0.05）
+- 单窗口的 +10.2% 是乐观值。更可信的说法是“平均 5% 左右，好的窗口能到 10%，差的时候会输”
+
+FVA 本来就不是模型属性，跟窗口、品类、促销节奏都有关系。一个数字不如一个分布诚实。
+
+### 概率预测：P10/P50/P90 + conformal
+
+![概率预测](images/probabilistic_forecast.png)
+
+- P10/P50/P90 都预测 naive 残差；P10/P90 在训练期最后 16 周做 split conformal
+- 80% 区间实际覆盖 **81.9%**，平均宽度 64.3 件
+- pinball loss：P10 **4.61** / P50 **11.10** / P90 **5.69**
+
+![校准](images/probabilistic_calibration.png)
+
+覆盖率略高于名义值，说明区间偏保守。对库存来说这通常比偏窄安全，但会多备一点货。
+
+### Newsvendor：点预测 vs 概率预测
+
+点预测版（用测试集误差分位，偏乐观）：
+
+| 策略 | 成本（$/series-week） |
 |---|---|
-| 最强基准（naive） | $13.48 |
+| naive | $13.48 |
 | LightGBM | **$12.02（−10.9%）** |
-| 正态近似（naive 误差） | 比经验分位高 2.4% |
 
-![newsvendor](images/newsvendor.png)
+概率版（用 16 周校准误差，严格样本外）：
 
-服务水平从 50% 提到 99%，成本从 $13 左右涨到 $35–37；80% 之后边际成本明显变陡。这和库存项目的结论一致：**不是服务水平越高越好，得看缺货成本和持有成本的比例**。
+| 策略 | 成本（$/series-week） |
+|---|---|
+| naive + conformal | $14.81 |
+| P50 + conformal | **$13.11（−11.5%）** |
+| naive + normal | $13.90 |
+
+![概率版 newsvendor](images/probabilistic_newsvendor.png)
+
+两个口径的绝对成本不能直接比：点预测版用了测试集误差分位，概率版用校准期误差分位，后者更接近上线时能看到的信息。但方向一致：**模型误差降下来，订货成本也降**；概率版里 P50+conformal 比正态近似低 5.7%。
 
 ## 几个判断
 
 - FVA 的分母要用**同窗口的最强基准**，不是随手拿 naive。这个项目里 naive 恰好最强，但换个窗口，seasonal 可能翻上来。
-- 预测提升 10%，newsvendor 成本也降约 10%，因为误差是线性传导的。真正决定省多少钱的，还是缺货/持有成本参数。
+- 单窗口 +10.2%，六折平均 +5.5%。报 FVA 最好同时给区间，不然很容易被一个窗口骗了。
+- 预测误差降 10%，newsvendor 成本大致也降 10%，因为误差是线性传导的。真正决定省多少钱的，还是缺货/持有成本参数。
 - 100 个 series 不是全量 M5。换成全部 30,490 个 series，长尾和零销量会更多，FVA 大概率会变。
 - 价格只用了每周均价，没有促销标记；M5 的促销信息藏在价格变化里，这块还能再挖。
 
@@ -103,6 +137,12 @@ python scripts/run_analysis.py
 
 #  ablation：直接预测销量 vs 预测 naive 残差
 python scripts/run_analysis.py --direct
+
+# 概率预测 + conformal
+python scripts/run_probabilistic.py
+
+# 滚动回测 + DM 检验
+python scripts/rolling_backtest.py
 ```
 
 结果写到 `results/`，图写到 `images/`，包括 `model_metrics.csv`、`model_metrics_direct.csv`、`predictions_test.csv`、`newsvendor_summary.csv`、`diagnostics.json`。
@@ -112,11 +152,14 @@ python scripts/run_analysis.py --direct
 ```
 src/m5.py                 数据加载、选 series、周度聚合、特征、基准、切分
 src/evaluation.py         MAE/RMSE/bias/tracking signal/FVA、newsvendor
+src/probabilistic.py      pinball、区间覆盖、conformal、DM 检验
 scripts/download_data.py  并行下载 M5
-scripts/run_analysis.py   端到端流程
+scripts/run_analysis.py   点预测端到端流程
+scripts/run_probabilistic.py  分位数预测 + conformal + 订货
+scripts/rolling_backtest.py   六折滚动回测 + DM
 tests/                    合成数据单测
-results/                  指标、预测、newsvendor 结果
-images/                   预测示例、模型对比、成本-服务前沿
+results/                  指标、预测、newsvendor、校准和滚动回测结果
+images/                   预测示例、概率区间、校准、成本前沿、滚动回测
 ```
 
 ## 数据来源
