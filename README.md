@@ -120,12 +120,33 @@ FVA 本来就不是模型属性，跟窗口、品类、促销节奏都有关系�
 
 两个口径的绝对成本不能直接比：点预测版用了测试集误差分位，概率版用校准期误差分位，后者更接近上线时能看到的信息。但方向一致：**模型误差降下来，订货成本也降**；概率版里 P50+conformal 比正态近似低 5.7%。
 
+### 分层 reconciliation：bottom-up 反而最好
+
+![分层](images/hierarchical.png)
+
+100 个 item-store 汇总到 10 家店、3 个州、1 个 total，一共 114 个节点。每层各自训练残差 LightGBM，再比较四种组合：
+
+| 方法 | item-store | store | state | total | 相干性缺口 |
+|---|---|---|---|---|---|
+| base | 22.50 | 147.75 | 386.31 | 844.20 | 1,825 |
+| **bottom-up** | **22.50** | **126.74** | **304.87** | **664.11** | **0** |
+| top-down | 40.58 | 182.29 | 388.73 | 844.20 | 0 |
+| MinT-OLS | 24.81 | 141.27 | 352.25 | 851.42 | 0 |
+
+- 独立预测的各层对不上：base 的 total 和 bottom 之和每周最多差 **1,825 件**
+- bottom-up 不但相干，store/state/total 的 MAE 还都更低——底层模型比聚合层模型更强
+- top-down 把底层 MAE 从 22.5 推到 40.6：固定历史份额不响应周内结构变化
+- MinT-OLS 强制相干，但底层从 22.5 退到 24.8，总量也没赢 bottom-up
+
+所以 reconciliation 不是“越复杂越好”。底层预测强的时候，bottom-up 是很难打的基准；MinT 的价值取决于各层 base forecast 的误差协方差，这里 OLS 没赢。
+
 ## 几个判断
 
 - FVA 的分母要用**同窗口的最强基准**，不是随手拿 naive。这个项目里 naive 恰好最强，但换个窗口，seasonal 可能翻上来。
 - 单窗口 +10.2%，六折平均 +5.5%。报 FVA 最好同时给区间，不然很容易被一个窗口骗了。
 - 预测误差降 10%，newsvendor 成本大致也降 10%，因为误差是线性传导的。真正决定省多少钱的，还是缺货/持有成本参数。
 - 100 个 series 不是全量 M5。换成全部 30,490 个 series，长尾和零销量会更多，FVA 大概率会变。
+- 分层这题里 bottom-up 赢了 MinT-OLS。不是 reconciliation 没用，是这份数据的底层预测已经很强，强制相干反而把好的底层拉坏。
 - 价格只用了每周均价，没有促销标记；M5 的促销信息藏在价格变化里，这块还能再挖。
 
 ## 运行
@@ -143,6 +164,9 @@ python scripts/run_probabilistic.py
 
 # 滚动回测 + DM 检验
 python scripts/rolling_backtest.py
+
+# 分层 reconciliation
+python scripts/hierarchical.py
 ```
 
 结果写到 `results/`，图写到 `images/`，包括 `model_metrics.csv`、`model_metrics_direct.csv`、`predictions_test.csv`、`newsvendor_summary.csv`、`diagnostics.json`。
@@ -153,13 +177,15 @@ python scripts/rolling_backtest.py
 src/m5.py                 数据加载、选 series、周度聚合、特征、基准、切分
 src/evaluation.py         MAE/RMSE/bias/tracking signal/FVA、newsvendor
 src/probabilistic.py      pinball、区间覆盖、conformal、DM 检验
+src/hierarchy.py          汇总矩阵、bottom-up / top-down / MinT-OLS
 scripts/download_data.py  并行下载 M5
 scripts/run_analysis.py   点预测端到端流程
 scripts/run_probabilistic.py  分位数预测 + conformal + 订货
 scripts/rolling_backtest.py   六折滚动回测 + DM
+scripts/hierarchical.py       分层预测与 reconciliation
 tests/                    合成数据单测
 results/                  指标、预测、newsvendor、校准和滚动回测结果
-images/                   预测示例、概率区间、校准、成本前沿、滚动回测
+images/                   预测示例、概率区间、校准、成本前沿、滚动回测、分层
 ```
 
 ## 数据来源

@@ -28,3 +28,4 @@ jobs:
           python tests/test_m5.py
           python tests/test_evaluation.py
           python tests/test_probabilistic.py
+          python tests/test_hierarchy.py
