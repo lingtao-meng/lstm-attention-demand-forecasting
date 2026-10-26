@@ -1,0 +1,35 @@
+{
+  "holdout_start": "2015-10-26/2015-11-01",
+  "critical_ratio": 0.5454545454545454,
+  "conformal_adjustment": 1.178722890290926,
+  "coverage_80": 0.8188461538461539,
+  "interval_width_80": 64.2712985085717,
+  "metrics": [
+    {
+      "quantile": 0.1,
+      "pinball": 4.612171023267492
+    },
+    {
+      "quantile": 0.5,
+      "pinball": 11.101388233247091
+    },
+    {
+      "quantile": 0.9,
+      "pinball": 5.689945607537804
+    }
+  ],
+  "newsvendor": [
+    {
+      "policy": "naive + conformal",
+      "cost": 14.807459807692307
+    },
+    {
+      "policy": "P50 + conformal",
+      "cost": 13.105699419079079
+    },
+    {
+      "policy": "naive + normal",
+      "cost": 13.900037963252242
+    }
+  ]
+}

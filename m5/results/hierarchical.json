@@ -1,0 +1,39 @@
+{
+  "nodes": 114,
+  "bottom_nodes": 100,
+  "holdout_start": "2015-10-26/2015-11-01",
+  "results": [
+    {
+      "method": "base",
+      "bottom_mae": 22.49964116680886,
+      "store_mae": 147.75483585881517,
+      "state_mae": 386.31382036181293,
+      "total_mae": 844.1961336008862,
+      "coherence_gap": 1825.091390570462
+    },
+    {
+      "method": "bottom-up",
+      "bottom_mae": 22.49964116680886,
+      "store_mae": 126.7404206992616,
+      "state_mae": 304.87193439108154,
+      "total_mae": 664.1121617847665,
+      "coherence_gap": 0.0
+    },
+    {
+      "method": "top-down",
+      "bottom_mae": 40.58359662388534,
+      "store_mae": 182.29431740226545,
+      "state_mae": 388.7250786429418,
+      "total_mae": 844.196133600888,
+      "coherence_gap": 0.0
+    },
+    {
+      "method": "MinT-OLS",
+      "bottom_mae": 24.81345277055373,
+      "store_mae": 141.2699575744707,
+      "state_mae": 352.2539215172419,
+      "total_mae": 851.4153392495596,
+      "coherence_gap": 0.0
+    }
+  ]
+}
