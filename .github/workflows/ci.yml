@@ -23,6 +23,9 @@ jobs:
       - name: Forecast error -> safety stock -> holding cost
         run: python scripts/forecast_to_inventory.py
 
+      - name: Compile modules
+        run: python -m compileall -q scripts m5/src m5/scripts
+
       - name: Forecast diagnostics (FVA + newsvendor)
         run: python scripts/forecast_diagnostics.py
 
