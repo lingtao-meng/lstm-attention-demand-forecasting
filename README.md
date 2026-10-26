@@ -126,12 +126,6 @@ python scripts/forecast_diagnostics.py
 python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 ```
 
-## 一些踩过的坑
-
-最初打算用 Google 的 Temporal Fusion Transformer（TFT），结果 pytorch-forecasting 和 pytorch-lightning 的版本冲突搞了很久没搞定。最后放弃了，直接用 PyTorch 从零写 LSTM+Attention。回头看这个决定反而是对的——手写一遍对底层理解深了很多。
-
-**关于 MAE 的口径（重要）**：LSTM 那一行的美元值（调优前 $43,504、调优后 ~$35,000）是从标准化空间反推的近似值；Naive / ARIMA / Prophet 是在原始美元空间直接测的。**真正可比的只有标准化空间的提升比例（22.8% → 37.9%）**，所以对外引用时请用百分比（−37.9%），不要用美元绝对值。
-
 ## M5 模块
 
 `m5/` 是同一主题下的扩展：M5 真实 Walmart 销售，100 个 item-store series，最后 26 周 holdout。
@@ -142,6 +136,12 @@ python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 - 分层：114 个节点，bottom-up 赢 MinT-OLS
 
 详细结果、图和复现命令见 [`m5/README.md`](m5/README.md)。
+
+## 一些踩过的坑
+
+最初打算用 Google 的 Temporal Fusion Transformer（TFT），结果 pytorch-forecasting 和 pytorch-lightning 的版本冲突搞了很久没搞定。最后放弃了，直接用 PyTorch 从零写 LSTM+Attention。回头看这个决定反而是对的——手写一遍对底层理解深了很多。
+
+**关于 MAE 的口径（重要）**：LSTM 那一行的美元值（调优前 $43,504、调优后 ~$35,000）是从标准化空间反推的近似值；Naive / ARIMA / Prophet 是在原始美元空间直接测的。**真正可比的只有标准化空间的提升比例（22.8% → 37.9%）**，所以对外引用时请用百分比（−37.9%），不要用美元绝对值。
 
 ## 运行
 

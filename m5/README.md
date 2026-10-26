@@ -6,13 +6,13 @@
 2. LightGBM 相对最强基准的 FVA 是多少？
 3. 误差降下来，订货成本能降多少？
 
-数据、代码、图表和结果都在仓库里，可以直接复现。
+数据、代码、图表和结果都在这个模块里，可以直接复现。
 
 ## 数据
 
 M5 来自 Kaggle 的 Walmart 销售竞赛，包含 10 家店、3,049 个商品、1,941 天的日销量，还有日历事件和每周价格。
 
-这个仓库取了 **100 个 item-store series**：每家店销量最高的 5 个，再随机抽 50 个。这样既不会全是畅销品，也不至于被长尾噪声淹没。
+这个模块取了 **100 个 item-store series**：每家店销量最高的 5 个，再随机抽 50 个。这样既不会全是畅销品，也不至于被长尾噪声淹没。
 
 - 日销量聚成周销量（周一到周日）
 - 最后 **26 周**做 holdout，前面按时间切分，不随机打乱
@@ -190,4 +190,4 @@ images/                   预测示例、概率区间、校准、成本前沿、
 
 ## 数据来源
 
-M5 Forecasting – Accuracy（Kaggle）。这里通过 Hugging Face 的公开镜像下载，文件是 `calendar.csv`、`sales_train_validation.csv`、`sell_prices.csv`。数据版权归原竞赛/沃尔玛所有，本仓库只用于学习和复现。
+M5 Forecasting – Accuracy（Kaggle）。这里通过 Hugging Face 的公开镜像下载，文件是 `calendar.csv`、`sales_train_validation.csv`、`sell_prices.csv`。数据版权归原竞赛/沃尔玛所有，本模块只用于学习和复现。
