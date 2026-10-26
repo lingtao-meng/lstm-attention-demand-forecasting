@@ -1,11 +1,22 @@
-# LSTM + Attention 需求预测
+# 需求预测与库存决策：门店级 LSTM + M5 概率预测
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/) [![CI](https://github.com/lingtao-meng/lstm-attention-demand-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/lingtao-meng/lstm-attention-demand-forecasting/actions/workflows/ci.yml)
 
 
-用 Walmart 零售数据训练了一个 LSTM 加 Self-Attention 的深度学习模型，做未来 4 周的销售预测。纯 PyTorch 手写的，没用高层 API。
+这个仓库有两块内容：
 
-另外还部署了一个 Streamlit 网页应用，可以直接选门店看预测结果。
+1. **门店级预测**（根目录）：用 Walmart 数据训练 LSTM + Self-Attention，做未来 4 周销售预测，并接到安全库存 / newsvendor。
+2. **M5 item-store 预测**（`m5/`）：100 个 item-store series 的周度预测，补了分位数、conformal、滚动回测和分层 reconciliation。
+
+两块都是“预测 → 决策”，不是只比模型指标。根目录的门店级模型还带一个 Streamlit 应用。
+
+## 项目结构
+
+| 模块 | 内容 | 入口 |
+|---|---|---|
+| 门店级预测 | Walmart 45 店、LSTM+Attention、P10/P50/P90、FVA、newsvendor | `scripts/`、`app/` |
+| M5 预测 | 100 个 item-store series、LightGBM 残差、conformal、六折滚动、分层 | [`m5/README.md`](m5/README.md) |
+
 
 在线应用：[点击试用](https://lstm-attention-demand-forecasting-94s4zjmdvbzoar6sqh5zqx.streamlit.app)
 
@@ -121,6 +132,17 @@ python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 
 **关于 MAE 的口径（重要）**：LSTM 那一行的美元值（调优前 $43,504、调优后 ~$35,000）是从标准化空间反推的近似值；Naive / ARIMA / Prophet 是在原始美元空间直接测的。**真正可比的只有标准化空间的提升比例（22.8% → 37.9%）**，所以对外引用时请用百分比（−37.9%），不要用美元绝对值。
 
+## M5 模块
+
+`m5/` 是同一主题下的扩展：M5 真实 Walmart 销售，100 个 item-store series，最后 26 周 holdout。
+
+- 点预测：LightGBM 残差，单窗口 FVA +10.2%；六折滚动 +5.5% ± 4.2%
+- 概率预测：P10/P50/P90 + conformal，80% 区间覆盖 81.9%
+- 订货：P50+conformal 的 newsvendor 成本 $13.11，比 naive+conformal 低 11.5%
+- 分层：114 个节点，bottom-up 赢 MinT-OLS
+
+详细结果、图和复现命令见 [`m5/README.md`](m5/README.md)。
+
 ## 运行
 
 ```bash
@@ -129,6 +151,16 @@ jupyter notebook lstm_demand_forecast.ipynb
 
 # 预测诊断：FVA + tracking signal + newsvendor
 python scripts/forecast_diagnostics.py
+
+# M5 模块（数据约 320MB，先下载）
+cd m5
+pip install -r requirements.txt
+python scripts/download_data.py
+python scripts/run_analysis.py
+python scripts/run_probabilistic.py
+python scripts/rolling_backtest.py
+python scripts/hierarchical.py
+cd ..
 
 # Streamlit app
 cd app && streamlit run app.py
