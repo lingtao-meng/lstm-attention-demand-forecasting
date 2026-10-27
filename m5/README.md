@@ -1,6 +1,8 @@
 # M5 周度需求预测：FVA 和 newsvendor
 
-用 M5（Walmart 真实销售数据）做一个 item-store 级的周度需求预测。这个项目不是再比一次模型，主要想回答三个问题：
+[![CI](https://github.com/lingtao-meng/lstm-attention-demand-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/lingtao-meng/lstm-attention-demand-forecasting/actions/workflows/ci.yml)
+
+用 M5（Walmart 真实销售数据）做一个 item-store 级的周度需求预测。这个模块不是再比一次模型，主要想回答三个问题：
 
 1. 简单基准到底有多强？
 2. LightGBM 相对最强基准的 FVA 是多少？
@@ -142,7 +144,7 @@ FVA 本来就不是模型属性，跟窗口、品类、促销节奏都有关系�
 
 ## 几个判断
 
-- FVA 的分母要用**同窗口的最强基准**，不是随手拿 naive。这个项目里 naive 恰好最强，但换个窗口，seasonal 可能翻上来。
+- FVA 的分母要用**同窗口的最强基准**，不是随手拿 naive。这个模块里 naive 恰好最强，但换个窗口，seasonal 可能翻上来。
 - 单窗口 +10.2%，六折平均 +5.5%。报 FVA 最好同时给区间，不然很容易被一个窗口骗了。
 - 预测误差降 10%，newsvendor 成本大致也降 10%，因为误差是线性传导的。真正决定省多少钱的，还是缺货/持有成本参数。
 - 100 个 series 不是全量 M5。换成全部 30,490 个 series，长尾和零销量会更多，FVA 大概率会变。
