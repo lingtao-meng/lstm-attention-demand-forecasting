@@ -7,14 +7,14 @@
   "models": [
     {
       "model": "lgbm",
-      "mae": 22.770554388904156,
-      "rmse": 47.241915914131965,
-      "bias": -1.896504758459427,
-      "bias_pct": -0.014701017468000675,
-      "median_ts": -2.589463533032866,
-      "biased_series": 38,
+      "mae": 22.875278443329613,
+      "rmse": 47.46389747801689,
+      "bias": -1.9601213975958864,
+      "bias_pct": -0.015194150595681457,
+      "median_ts": -2.573908823971704,
+      "biased_series": 45,
       "series": 100,
-      "fva_vs_naive": 0.10214832783101346,
+      "fva_vs_naive": 0.09801901829483328,
       "fva_vs_best": 0.0
     },
     {
@@ -27,7 +27,7 @@
       "biased_series": 2,
       "series": 100,
       "fva_vs_naive": 0.0,
-      "fva_vs_best": -0.11376971385958279
+      "fva_vs_best": -0.1086708259741036
     },
     {
       "model": "ma4",
@@ -39,7 +39,7 @@
       "biased_series": 21,
       "series": 100,
       "fva_vs_naive": -0.10722410106310365,
-      "fva_vs_best": -0.23319267021948664
+      "fva_vs_best": -0.22754705866406533
     },
     {
       "model": "seasonal",
@@ -51,13 +51,13 @@
       "biased_series": 80,
       "series": 100,
       "fva_vs_naive": -0.47404419235960504,
-      "fva_vs_best": -0.641745778340737
+      "fva_vs_best": -0.6342297922656537
     }
   ],
   "newsvendor": {
     "baseline_cost": 13.481461131656804,
-    "lgbm_cost": 12.01537408227907,
-    "cost_reduction": 0.10874837935296999,
+    "lgbm_cost": 11.873096699640467,
+    "cost_reduction": 0.11930193740199413,
     "normal_premium": 0.02380442275190764
   }
 }

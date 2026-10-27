@@ -76,8 +76,8 @@ def weekly_panel(
             .rename(columns={"sell_price": "price"})
         )
         weekly = weekly.merge(price_weekly, on=["store_id", "item_id", "week"], how="left")
-        weekly["price"] = weekly.groupby("id", observed=True)["price"].ffill().bfill()
-        weekly["price"] = weekly["price"].fillna(weekly.groupby("id", observed=True)["price"].transform("median"))
+        # 只用过去已知价格：ffill 不引入未来；前几周缺失就留 NaN，交给模型处理
+        weekly["price"] = weekly.groupby("id", observed=True)["price"].ffill()
 
     week_order = {week: idx for idx, week in enumerate(sorted(weekly["week"].unique()))}
     weekly["week_index"] = weekly["week"].map(week_order)
@@ -125,7 +125,9 @@ def add_features(weekly: pd.DataFrame) -> pd.DataFrame:
 
     if "price" in df.columns:
         price_group = df.groupby("id", observed=True)["price"]
-        df["price_rel"] = df["price"] / price_group.transform("mean")
+        # 只用当前周之前的价格均值，避免测试期价格反过来改变历史特征
+        past_mean = price_group.transform(lambda s: s.expanding().mean().shift(1))
+        df["price_rel"] = (df["price"] / past_mean).replace([np.inf, -np.inf], np.nan)
         df["price_change"] = price_group.pct_change().replace([np.inf, -np.inf], np.nan)
 
     for col in CAT_COLS:

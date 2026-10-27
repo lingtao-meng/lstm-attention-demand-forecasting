@@ -85,3 +85,17 @@ class TestFeaturesAndBaselines(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestPriceLeakage(unittest.TestCase):
+    def test_future_price_does_not_change_past_relative_price(self):
+        weeks = pd.period_range("2020-01-06", periods=4, freq="W")
+        base = pd.DataFrame({
+            "id": ["A"] * 4, "week": weeks, "sales": [10, 10, 10, 10],
+            "price": [10.0, 10.0, 10.0, 10.0], "event": 0, "snap": 0,
+        })
+        changed = base.copy()
+        changed.loc[3, "price"] = 100.0
+        before = add_features(base)["price_rel"].to_numpy()
+        after = add_features(changed)["price_rel"].to_numpy()
+        np.testing.assert_allclose(before[:3], after[:3], equal_nan=True)
