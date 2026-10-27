@@ -5,7 +5,7 @@
   "critical_ratio": 0.5454545454545454,
   "underage": 0.3,
   "overage": 0.25,
-  "improvement_scenario": 0.379,
+  "improvement_scenario": 0.0771,
   "models": [
     {
       "model": "ma4",
@@ -47,9 +47,9 @@
   "newsvendor": {
     "cost_empirical": 12666.22148491647,
     "cost_normal": 12975.44706904806,
-    "cost_model": 7865.723542133129,
+    "cost_model": 11689.655808429412,
     "normal_over_empirical": 0.024413404147387574,
-    "model_saving_vs_empirical": 0.3789999999999999
+    "model_saving_vs_empirical": 0.07709999999999984
   },
   "frontier": [
     {

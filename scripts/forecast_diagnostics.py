@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Forecast diagnostics: FVA, tracking signal, and newsvendor ordering.
 
-The project reports a 37.9% MAE improvement over a naive forecast.  Two
+The project reports a 7.7% MAE improvement over a naive forecast.  Two
 questions follow that a planning team should ask:
 
 1. **Forecast value added (FVA)** — is the benchmark the right one?  A naive
@@ -15,7 +15,7 @@ questions follow that a planning team should ask:
 This script uses only the committed Walmart data and reproducible benchmarks.
 The LSTM's dollar MAE is **not** compared directly: the README itself notes it
 is back-transformed from standardised space, so the model's value is expressed
-as a scenario — a 37.9% reduction applied to the best benchmark's errors.
+as a scenario — a 7.7% reduction applied to the best benchmark's errors.
 
 Outputs: results/fva_by_model.csv, fva_tracking_by_store.csv,
 newsvendor_summary.csv, newsvendor_frontier.csv, forecast_diagnostics.json,
@@ -227,7 +227,7 @@ def main() -> int:
     ap.add_argument("--holdout", type=int, default=26, help="weeks at the end of each store")
     ap.add_argument("--underage", type=float, default=0.30, help="margin lost per dollar of unmet demand")
     ap.add_argument("--overage", type=float, default=0.25, help="holding cost per dollar left over")
-    ap.add_argument("--improvement", type=float, default=0.379, help="scenario error reduction vs benchmark")
+    ap.add_argument("--improvement", type=float, default=0.0771, help="scenario error reduction vs benchmark")
     args = ap.parse_args()
 
     RESULTS.mkdir(exist_ok=True)

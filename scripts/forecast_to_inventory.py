@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """从预测误差到库存成本：把 MAE 的改善换算成钱。
 
-需求预测项目最常见的断点：模型 MAE 降了 37.9%，然后呢？
+需求预测项目最常见的断点：模型 MAE 降了 7.7%，然后呢？
 计划岗真正关心的是这一步——**预测误差下降，能换来多少安全库存和持有成本的下降**。
 
 做法（口径明确、可复现）：
 
 1. 用 Walmart 数据算出 **naive 基线**（上周销量当本周预测）的真实误差分布；
-2. 假设新模型的误差按同一比例下降（默认 ×0.621，即 MAE 降 37.9%）；
+2. 假设新模型的误差按同一比例下降（默认 ×0.621，即 MAE 降 7.7%）；
 3. 安全库存 ``SS = z · σ_error · √L``（L = 提前期，周），持有成本 = SS × 持有成本率；
 4. 输出：误差 → 安全库存 → 年持有成本 的换算，以及对服务水平的敏感性。
 
-注意这是一个**情景推算**，不是企业实测：它回答的是「误差降 37.9% 意味着什么」，
+注意这是一个**情景推算**，不是企业实测：它回答的是「误差降 7.7% 意味着什么」，
 而不是「我们公司省了多少钱」。
 
 Usage
@@ -70,8 +70,8 @@ def safety_stock(z: float, sigma_error: float, lead_time_weeks: float) -> float:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(ROOT / "data" / "Walmart.csv"))
-    ap.add_argument("--improvement", type=float, default=0.379,
-                    help="relative MAE reduction of the new model (0.379 = 37.9%)")
+    ap.add_argument("--improvement", type=float, default=0.0771,
+                    help="relative MAE reduction of the new model (0.0771 = 7.71%)")
     ap.add_argument("--lead-time", type=float, default=4.0, help="lead time in weeks")
     ap.add_argument("--holding-rate", type=float, default=0.25)
     ap.add_argument("--service-level", type=float, default=0.95)
@@ -160,7 +160,7 @@ def main() -> int:
         sens.assign(service_level=(sens["service_level"] * 100).round(1))
         .to_string(index=False, float_format=lambda v: f"{v:,.0f}"),
         "",
-        "> 口径说明：这是情景推算，不是企业实测。它回答「MAE 降 37.9% 意味着什么」，"
+        "> 口径说明：这是情景推算，不是企业实测。它回答「MAE 降 7.7% 意味着什么」，"
         "而不是「某公司省了多少钱」。安全库存对预测误差是线性关系，"
         "所以误差降幅会等比例传导到库存——这也是预测项目最容易被低估的价值。",
         "",
