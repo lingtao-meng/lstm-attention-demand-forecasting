@@ -99,6 +99,7 @@ def load_data():
 # ── Main UI ──
 st.title("📊 零售需求预测 — LSTM + Attention")
 st.markdown("基于 Walmart 45家门店数据，使用深度学习模型预测未来4周销售额")
+st.warning("演示页仍用旧版逐店标准化，预测口径与 scripts/train_lstm_forecast.py 的真实时间切分结果不可直接比较。")
 st.markdown("---")
 
 # Load
