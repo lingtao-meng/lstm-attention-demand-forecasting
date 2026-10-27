@@ -43,7 +43,7 @@ def load_panel(path: Path) -> pd.DataFrame:
     return df.sort_values(["Store", "Date"]).reset_index(drop=True)
 
 
-def build_windows(panel: pd.DataFrame, target_index=None):
+def build_windows(panel: pd.DataFrame, input_weeks: int = INPUT_WEEKS, target_index=None):
     """逐门店滑窗；返回 (X, Y, target_dates, store_ids, y_dates)。
 
     ``target_index`` 用于折内重取目标（滚动回测时按时间重建）。
@@ -54,8 +54,8 @@ def build_windows(panel: pd.DataFrame, target_index=None):
         vals = g[FEATURES].to_numpy(dtype=np.float32)
         dates = g["Date"].to_numpy()
         n = len(g)
-        for end in range(INPUT_WEEKS, n - HORIZON + 1):
-            x = vals[end - INPUT_WEEKS:end]                       # 过去 12 周
+        for end in range(input_weeks, n - HORIZON + 1):
+            x = vals[end - input_weeks:end]                       # 过去 12 周
             y = vals[end:end + HORIZON, 0]                        # 未来 4 周销量
             d = dates[end:end + HORIZON]                          # 4 个目标日期
             X.append(x); Y.append(y); stores.append(store); tdates.append(d)
@@ -104,9 +104,9 @@ class Forecaster(nn.Module):
         return self.head(h[:, -1, :])
 
 
-def train_model(X, Y, Xv, Yv, features, use_attention, epochs, seed, lr=1e-3):
+def train_model(X, Y, Xv, Yv, features, use_attention, epochs, seed, lr=1e-3, hidden=64, layers=2, dropout=0.2):
     torch.manual_seed(seed); np.random.seed(seed)
-    model = Forecaster(features, use_attention=use_attention)
+    model = Forecaster(features, hidden=hidden, layers=layers, use_attention=use_attention, dropout=dropout)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     loss_fn = nn.SmoothL1Loss()
     ds = TensorDataset(torch.from_numpy(X), torch.from_numpy(Y))
@@ -141,10 +141,11 @@ def main() -> int:
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--folds", type=int, default=0, help="滚动回测折数（0 表示不做）")
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--input-weeks", type=int, default=INPUT_WEEKS)
     args = ap.parse_args()
 
     panel = load_panel(Path(args.data))
-    X, Y, stores, tdates = build_windows(panel)
+    X, Y, stores, tdates = build_windows(panel, args.input_weeks)
     tr, va, te = split_by_target_dates(tdates)
 
     # 标准化：只用训练期样本拟合（逐特征），验证/测试直接 transform

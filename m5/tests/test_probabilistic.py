@@ -15,6 +15,7 @@ from src.probabilistic import (  # noqa: E402
     conformal_adjustment,
     conformal_quantile,
     dm_test,
+    dm_test_hac,
     interval_coverage,
     interval_width,
     pinball_loss,
@@ -59,6 +60,9 @@ class TestDM(unittest.TestCase):
         errors = np.array([1.0, -2.0, 3.0, -1.0])
         _, p_value = dm_test(errors, errors)
         self.assertEqual(p_value, 1.0)
+
+    def test_hac_identical_diffs(self):
+        self.assertEqual(dm_test_hac(np.zeros(20))[1], 1.0)
 
     def test_better_model_has_positive_statistic(self):
         rng = np.random.default_rng(0)

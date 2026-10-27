@@ -54,3 +54,26 @@ def dm_test(errors_a: np.ndarray, errors_b: np.ndarray, power: float = 1.0) -> t
     statistic = float(diff.mean() / np.sqrt(diff.var(ddof=1) / n))
     p_value = float(2 * (1 - stats.norm.cdf(abs(statistic))))
     return statistic, p_value
+
+
+def dm_test_hac(diff: np.ndarray, lags: int = 4) -> tuple[float, float]:
+    """DM test on a 1-D loss-difference series with Newey-West variance.
+
+    Use weekly aggregated loss differences, not one row per series-week: the
+    latter treats 100 series x 26 weeks as independent and overstates n.
+    """
+    diff = np.asarray(diff, dtype=float)
+    n = len(diff)
+    if n < 3 or diff.std(ddof=1) == 0:
+        return 0.0, 1.0
+    mean = float(diff.mean())
+    centered = diff - mean
+    gamma0 = float(np.dot(centered, centered) / n)
+    variance = gamma0
+    for lag in range(1, min(lags, n - 1) + 1):
+        gamma = float(np.dot(centered[lag:], centered[:-lag]) / n)
+        variance += 2 * (1 - lag / (lags + 1)) * gamma
+    variance = max(variance, 1e-12)
+    statistic = mean / float(np.sqrt(variance / n))
+    p_value = float(2 * (1 - stats.norm.cdf(abs(statistic))))
+    return statistic, p_value

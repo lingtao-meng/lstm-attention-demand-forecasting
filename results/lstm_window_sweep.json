@@ -1,0 +1,26 @@
+[
+  {
+    "input_weeks": 4,
+    "model_mae": 0.10464226454496384,
+    "naive_mae": 0.11551174521446228,
+    "improvement_pct": 9.409848885338775
+  },
+  {
+    "input_weeks": 8,
+    "model_mae": 0.10498451441526413,
+    "naive_mae": 0.11537936329841614,
+    "improvement_pct": 9.009279117156217
+  },
+  {
+    "input_weeks": 12,
+    "model_mae": 0.10623455047607422,
+    "naive_mae": 0.11511130630970001,
+    "improvement_pct": 7.711454346407484
+  },
+  {
+    "input_weeks": 16,
+    "model_mae": 0.09807446599006653,
+    "naive_mae": 0.11496888101100922,
+    "improvement_pct": 14.694772074301488
+  }
+]

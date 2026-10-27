@@ -31,7 +31,7 @@ from src.m5 import (  # noqa: E402
     select_series,
     weekly_panel,
 )
-from src.probabilistic import dm_test  # noqa: E402
+from src.probabilistic import dm_test_hac  # noqa: E402
 
 RESULTS = ROOT / "results"
 IMAGES = ROOT / "images"
@@ -105,9 +105,15 @@ def main() -> int:
         best_baseline = min(result[f"mae_{m}"] for m in ("naive", "seasonal", "ma4"))
         result["fva_naive"] = 1 - result["mae_lgbm"] / result["mae_naive"]
         result["fva_best"] = 1 - result["mae_lgbm"] / best_baseline
-        statistic, p_value = dm_test(
-            (test["sales"] - test["lgbm"]).to_numpy(),
-            (test["sales"] - test["naive"]).to_numpy(),
+        # 先按周把截面误差聚合，再做 HAC；不能把 100 条序列 x 26 周当独立样本
+        weekly = (
+            test.assign(loss_lgbm=(test["sales"] - test["lgbm"]).abs(),
+                        loss_naive=(test["sales"] - test["naive"]).abs())
+            .groupby("week")[["loss_lgbm", "loss_naive"]]
+            .mean()
+        )
+        statistic, p_value = dm_test_hac(
+            (weekly["loss_lgbm"] - weekly["loss_naive"]).to_numpy(), lags=4
         )
         result["dm_stat"] = statistic
         result["dm_p"] = p_value
