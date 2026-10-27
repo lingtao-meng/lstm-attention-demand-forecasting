@@ -131,6 +131,32 @@ def train_model(X, Y, Xv, Yv, features, use_attention, epochs, seed, lr=1e-3, hi
     return model
 
 
+
+def date_block_folds(tdates: np.ndarray, folds: int = 5, test_weeks: int = 12, valid_weeks: int = 8):
+    """Expanding-window folds bounded by target dates, not flat sample order.
+
+    A sample is kept only if its whole 4-week target window fits inside one
+    block; windows crossing a boundary are dropped.  This is what prevents the
+    same store-target combination from appearing in both validation and test.
+    """
+    first = pd.to_datetime(tdates[:, 0])
+    last = pd.to_datetime(tdates[:, -1])
+    end = last.max().normalize()
+    out = []
+    for k in range(folds):
+        test_end = end - pd.Timedelta(weeks=test_weeks * k)
+        test_start = test_end - pd.Timedelta(weeks=test_weeks) + pd.Timedelta(days=1)
+        valid_end = test_start - pd.Timedelta(days=1)
+        valid_start = valid_end - pd.Timedelta(weeks=valid_weeks) + pd.Timedelta(days=1)
+        train = np.where(last < valid_start)[0]
+        valid = np.where((first >= valid_start) & (last <= valid_end))[0]
+        test = np.where((first >= test_start) & (last <= test_end))[0]
+        out.append({"fold": folds - k, "train": train, "valid": valid, "test": test,
+                    "train_end": str(valid_start.date()),
+                    "valid_range": [str(valid_start.date()), str(valid_end.date())],
+                    "test_range": [str(test_start.date()), str(test_end.date())]})
+    return list(reversed(out))
+
 def step_mae(pred, true):
     return np.abs(pred - true).mean(axis=0)
 
@@ -196,18 +222,14 @@ def main() -> int:
 
     if args.folds:
         folds = []
-        order = np.argsort(tdates[:, -1])
-        chunks = np.array_split(order, args.folds + 1)
-        for k in range(1, args.folds + 1):
-            test_idx = chunks[k]
-            train_idx = np.concatenate(chunks[:k])
-            if len(train_idx) < 100 or len(test_idx) < 50:
+        for spec in date_block_folds(tdates, args.folds):
+            tr_i, va_i, test_idx = spec["train"], spec["valid"], spec["test"]
+            if len(tr_i) < 100 or len(test_idx) < 50:
                 continue
-            f_mu = X[train_idx].reshape(-1, len(FEATURES)).mean(0)
-            f_sd = X[train_idx].reshape(-1, len(FEATURES)).std(0) + 1e-8
-            fy_mu, fy_sd = Y[train_idx].mean(), Y[train_idx].std() + 1e-8
-            split_at = int(len(train_idx) * 0.85)
-            tr_i, va_i = train_idx[:split_at], train_idx[split_at:]
+            # 标准化只用训练区；验证区不参与 mean/std
+            f_mu = X[tr_i].reshape(-1, len(FEATURES)).mean(0)
+            f_sd = X[tr_i].reshape(-1, len(FEATURES)).std(0) + 1e-8
+            fy_mu, fy_sd = Y[tr_i].mean(), Y[tr_i].std() + 1e-8
             model = train_model((X[tr_i]-f_mu)/f_sd, (Y[tr_i]-fy_mu)/fy_sd,
                                 (X[va_i]-f_mu)/f_sd, (Y[va_i]-fy_mu)/fy_sd,
                                 len(FEATURES), True, max(10, args.epochs // 2), args.seed)
@@ -216,10 +238,11 @@ def main() -> int:
             yt = (Y[test_idx]-fy_mu)/fy_sd
             nv = np.repeat((X[test_idx][:, -1, 0][:, None]-fy_mu)/fy_sd, HORIZON, axis=1)
             m, nm = np.abs(p-yt).mean(), np.abs(nv-yt).mean()
-            folds.append({"fold": k, "n_test": int(len(test_idx)),
+            folds.append({"fold": spec["fold"], "n_train": int(len(tr_i)), "n_valid": int(len(va_i)),
+                          "n_test": int(len(test_idx)), "test_dates": spec["test_range"],
                           "model_mae": float(m), "naive_mae": float(nm),
                           "improvement_pct": float((nm-m)/nm*100)})
-            print(f"  fold {k}: 模型 {m:.4f} vs naive {nm:.4f} → {(nm-m)/nm*100:+.1f}%")
+            print(f"  fold {spec['fold']}: 模型 {m:.4f} vs naive {nm:.4f} → {(nm-m)/nm*100:+.1f}%")
         out["rolling_cv"] = folds
         if folds:
             imps = [f["improvement_pct"] for f in folds]
