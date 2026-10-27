@@ -75,7 +75,7 @@ python scripts/download_data.py
 
 ![模型对比](images/model_comparison.png)
 
-模型还是有偏：38/100 家店的 |TS| > 4，中位 TS −2.59。
+模型还是有偏：45/100 家店的 |TS| > 4，中位 TS −2.57。
 
 ### 滚动回测：+11.1% 是最好的一折
 
