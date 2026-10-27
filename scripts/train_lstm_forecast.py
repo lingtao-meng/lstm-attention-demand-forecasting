@@ -12,7 +12,7 @@
 用法：
     python scripts/train_lstm_forecast.py                # 主实验：切分 + 双模型 + naive
     python scripts/train_lstm_forecast.py --folds 5      # 追加滚动回测
-    python scripts/train_lstm_forecast.py --epochs 40
+    python scripts/train_lstm_forecast.py --epochs 25
 """
 
 from __future__ import annotations
@@ -164,7 +164,7 @@ def step_mae(pred, true):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(ROOT / "data" / "Walmart.csv"))
-    ap.add_argument("--epochs", type=int, default=30)
+    ap.add_argument("--epochs", type=int, default=25)
     ap.add_argument("--folds", type=int, default=0, help="滚动回测折数（0 表示不做）")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--input-weeks", type=int, default=INPUT_WEEKS)

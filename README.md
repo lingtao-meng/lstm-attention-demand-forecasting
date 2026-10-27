@@ -30,7 +30,7 @@ Walmart Recruiting - Store Sales Forecasting，Kaggle 公开数据集。45 家�
 
 可复现版本是 `scripts/train_lstm_forecast.py` 的四步点预测。旧 notebook/App 的“3 分位头”是早期演示，不再作为主结果；分位数预测在 `m5/` 模块里用 conformal 实现。
 
-训练了 40 个 epoch，早停防止过拟合。总共 83 万参数，在 Mac 上跑的。
+主实验训练 25 个 epoch，按验证损失选最佳检查点；默认 Attention 模型约 20.3 万参数。在 Mac 上跑的。
 
 ## 效果对比
 
