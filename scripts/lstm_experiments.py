@@ -29,16 +29,18 @@ def prepare(panel, input_weeks: int):
     Xs = (X - mu) / sd
     y_mu, y_sd = Y[tr].mean(), Y[tr].std() + 1e-8
     Ys = (Y - y_mu) / y_sd
-    return Xs, Ys, tr, va, te
+    # 显式用原始“最后一周销量”构造 naive，再套同一套 y 标准化
+    naive = np.repeat(((X[:, -1, 0] - y_mu) / y_sd)[:, None], base.HORIZON, axis=1)
+    return Xs, Ys, naive, tr, va, te
 
 
 def run_one(panel, input_weeks: int, epochs: int, seed: int = 42):
-    Xs, Ys, tr, va, te = prepare(panel, input_weeks)
+    Xs, Ys, naive_all, tr, va, te = prepare(panel, input_weeks)
     model = base.train_model(Xs[tr], Ys[tr], Xs[va], Ys[va], len(base.FEATURES), True, epochs, seed)
     import torch
     with torch.no_grad():
         pred = model(torch.from_numpy(Xs[te])).numpy()
-    naive = np.repeat(Xs[te][:, -1, 0][:, None], base.HORIZON, axis=1)
+    naive = naive_all[te]
     mae = float(np.abs(pred - Ys[te]).mean())
     nmae = float(np.abs(naive - Ys[te]).mean())
     return {"input_weeks": input_weeks, "model_mae": mae, "naive_mae": nmae,
@@ -57,7 +59,7 @@ def window_sweep(panel, epochs: int):
 def optuna_search(panel, epochs: int, trials: int):
     import optuna
 
-    Xs, Ys, tr, va, te = prepare(panel, 12)
+    Xs, Ys, _, tr, va, te = prepare(panel, 12)
 
     def objective(trial):
         hidden = trial.suggest_categorical("hidden", [32, 64, 96])

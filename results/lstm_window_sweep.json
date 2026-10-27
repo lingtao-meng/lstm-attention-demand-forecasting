@@ -2,25 +2,25 @@
   {
     "input_weeks": 4,
     "model_mae": 0.10464226454496384,
-    "naive_mae": 0.11551174521446228,
-    "improvement_pct": 9.409848885338775
+    "naive_mae": 0.11549261212348938,
+    "improvement_pct": 9.39484126216135
   },
   {
     "input_weeks": 8,
     "model_mae": 0.10498451441526413,
-    "naive_mae": 0.11537936329841614,
-    "improvement_pct": 9.009279117156217
+    "naive_mae": 0.11535810679197311,
+    "improvement_pct": 8.992512676561022
   },
   {
     "input_weeks": 12,
     "model_mae": 0.10623455047607422,
-    "naive_mae": 0.11511130630970001,
-    "improvement_pct": 7.711454346407484
+    "naive_mae": 0.11511039733886719,
+    "improvement_pct": 7.71072558863979
   },
   {
     "input_weeks": 16,
     "model_mae": 0.09807446599006653,
-    "naive_mae": 0.11496888101100922,
-    "improvement_pct": 14.694772074301488
+    "naive_mae": 0.11492627114057541,
+    "improvement_pct": 14.663144451886117
   }
 ]

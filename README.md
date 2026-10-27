@@ -14,7 +14,7 @@
 
 | 模块 | 内容 | 入口 |
 |---|---|---|
-| 门店级预测 | Walmart 45 店、LSTM+Attention、P10/P50/P90、FVA、newsvendor | `scripts/`、`app/` |
+| 门店级预测 | Walmart 45 店、LSTM+Attention、四步点预测、FVA、newsvendor | `scripts/`、`app/` |
 | M5 预测 | 100 个 item-store series、LightGBM 残差、conformal、六折滚动、分层 | [`m5/README.md`](m5/README.md) |
 
 
@@ -26,7 +26,9 @@ Walmart Recruiting - Store Sales Forecasting，Kaggle 公开数据集。45 家�
 
 ## 模型结构
 
-输入层（过去12周×6个特征）→ 双层双向 LSTM（128维）→ Multi-Head Self-Attention（4头）→ 残差连接 + LayerNorm → 全连接层 → 输出（未来4周×3个分位数 P10/P50/P90）。
+输入层（过去12周×6个特征）→ 双层双向 LSTM → Multi-Head Self-Attention → 残差连接 + LayerNorm → 全连接层 → 输出未来4周销量。
+
+可复现版本是 `scripts/train_lstm_forecast.py` 的四步点预测。旧 notebook/App 的“3 分位头”是早期演示，不再作为主结果；分位数预测在 `m5/` 模块里用 conformal 实现。
 
 训练了 40 个 epoch，早停防止过拟合。总共 83 万参数，在 Mac 上跑的。
 
@@ -43,9 +45,9 @@ Walmart Recruiting - Store Sales Forecasting，Kaggle 公开数据集。45 家�
 | Prophet（Meta） | $95,830 | -70.0% |
 | **LSTM + Attention（旧口径）** | — | 待重跑；真实四步重跑见下节 **+7.7%** |
 
-树模型（XGBoost +20%, LightGBM +25%）比传统统计方法（ARIMA +7.5%）好不少，但还是打不过 LSTM。Prophet 仍然最差。
+这张表是旧口径，只作历史对照；当前可复现结果是 `scripts/train_lstm_forecast.py` 的四步点预测（相对 naive 约 +7.7%），不再用旧表里的百分比下结论。
 
-LSTM 的优势在于它能学到每家门店的独立时序模式——树模型把 12 周×6 特征拍平成 72 维向量，丢失了时序结构信息。
+旧稿这里写“LSTM 能学到独立时序模式、树模型打不过 LSTM”，但真实重跑只比 naive 好约 7.7%，且滚动回测方差很大；不能再用这句话下强结论。
 
 ## 扩展实验
 
@@ -60,10 +62,10 @@ LSTM 的优势在于它能学到每家门店的独立时序模式——树模型
 
 | 输入窗口 | 四步 MAE | 相对 naive |
 |---|---|---|
-| 4 周 | 0.1046 | +9.41% |
-| 8 周 | 0.1050 | +9.01% |
+| 4 周 | 0.1046 | +9.39% |
+| 8 周 | 0.1050 | +8.99% |
 | 12 周 | 0.1062 | +7.71% |
-| 16 周 | 0.0981 | **+14.69%** |
+| 16 周 | 0.0981 | **+14.66%** |
 
 这次 16 周最好，不是原稿说的 8 周。差异可能来自 seed 和训练轮数，先不把它当成稳定结论。
 
@@ -95,7 +97,7 @@ MAE 降 7.7% 是这次四步重跑的实测改善；把它按同比例传导到�
 `scripts/forecast_to_inventory.py` 用 Walmart 数据做了这个换算：
 
 1. 先用 naive 基线（上周销量当本周预测）算出**真实误差分布**——不是拍脑袋的假设；
-2. 假设新模型误差按同比例缩小（σ_model = 0.621 × σ_naive）；
+2. 假设新模型误差按同比例缩小（σ_model = 0.923 × σ_naive，即 7.7% 改善）；
 3. 按 `SS = z · σ_error · √L`（L = 4 周提前期）反推安全库存与年持有成本。
 
 结果（45 家门店，95% 服务水平，持有成本率 25%/年）：
