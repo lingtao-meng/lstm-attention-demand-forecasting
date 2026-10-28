@@ -43,20 +43,24 @@ def weekly_panel(
     prices: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Melt daily sales, aggregate to weeks, and attach calendar/price features."""
-    calendar = calendar.assign(week=pd.to_datetime(calendar["date"]).dt.to_period("W"))
+    calendar = calendar.copy()
+    calendar["date"] = pd.to_datetime(calendar["date"])
+    # 只保留 calendar 里真正有 7 天的零售周；最后一周常只有 2 天，不能按整周评价。
+    days_per_week = calendar.groupby("wm_yr_wk")["date"].nunique()
+    complete_weeks = days_per_week[days_per_week == 7].index
+    calendar = calendar[calendar["wm_yr_wk"].isin(complete_weeks)].copy()
+    week_start = calendar.groupby("wm_yr_wk")["date"].min()
+    calendar["week_start"] = calendar["wm_yr_wk"].map(week_start)
+
     d_cols = [c for c in selected.columns if c.startswith("d_")]
     long = selected.melt(id_vars=ID_COLS, value_vars=d_cols, var_name="d", value_name="sales")
     long = long.merge(
-        calendar[["d", "date", "wm_yr_wk", "event_name_1", "snap_CA", "snap_TX", "snap_WI"]],
+        calendar[["d", "date", "wm_yr_wk", "week_start", "event_name_1", "snap_CA", "snap_TX", "snap_WI"]],
         on="d",
         how="left",
     )
     long["date"] = pd.to_datetime(long["date"])
-    # M5 的周是周日—周六；pandas 的 W 周是周一—周日，直接 to_period 会把
-    # 一个 M5 周切成两段，价格也会错位。先按 wm_yr_wk 分组，week 仅作展示。
-    long["week_start"] = long["date"] - pd.to_timedelta(
-        (long["date"].dt.weekday + 1) % 7, unit="D"
-    )
+    # 真实锚点取该 wm 周在 calendar 的第一天（M5 是周六），仅用 Period 做排序/展示。
     long["week"] = long["week_start"].dt.to_period("W")
     long["event"] = long["event_name_1"].notna().astype(int)
     long["snap"] = np.select(
@@ -68,7 +72,8 @@ def weekly_panel(
     weekly = (
         long.groupby(ID_COLS + ["wm_yr_wk"], observed=True, as_index=False)
         .agg(sales=("sales", "sum"), event=("event", "max"), snap=("snap", "max"),
-             week=("week", "first"), week_start=("week_start", "first"))
+             week=("week", "first"), week_start=("week_start", "first"),
+             n_days=("date", "nunique"))
         .sort_values(["id", "week"])
         .reset_index(drop=True)
     )

@@ -1,20 +1,20 @@
 {
   "series": 100,
   "holdout_weeks": 26,
-  "holdout_start": "2015-10-19/2015-10-25",
+  "holdout_start": "2015-10-26/2015-11-01",
   "baseline": "naive",
   "critical_ratio": 0.5454545454545454,
   "models": [
     {
       "model": "lgbm",
-      "mae": 26.7609894641791,
-      "rmse": 56.78501167480719,
-      "bias": -3.3692884234111165,
-      "bias_pct": -0.026843300017370942,
-      "median_ts": -4.013179161858488,
-      "biased_series": 53,
+      "mae": 26.822609783337526,
+      "rmse": 56.42357024190959,
+      "bias": -4.104861565262662,
+      "bias_pct": -0.03270365034957873,
+      "median_ts": -3.6904169531436204,
+      "biased_series": 43,
       "series": 100,
-      "fva_vs_naive": 0.07380465893447197,
+      "fva_vs_naive": 0.07167198545481979,
       "fva_vs_best": 0.0
     },
     {
@@ -27,7 +27,7 @@
       "biased_series": 19,
       "series": 100,
       "fva_vs_naive": 0.0,
-      "fva_vs_best": -0.07968584559015857
+      "fva_vs_best": -0.07720545360244713
     },
     {
       "model": "ma4",
@@ -39,7 +39,7 @@
       "biased_series": 32,
       "series": 100,
       "fva_vs_naive": -0.1035867843403484,
-      "fva_vs_best": -0.19152703043263308
+      "fva_vs_best": -0.18878970261501116
     },
     {
       "model": "seasonal",
@@ -51,13 +51,13 @@
       "biased_series": 83,
       "series": 100,
       "fva_vs_naive": -0.3534070790570132,
-      "fva_vs_best": -0.46125446657937785
+      "fva_vs_best": -0.457897486504373
     }
   ],
   "newsvendor": {
     "baseline_cost": 15.546203788327055,
-    "lgbm_cost": 14.363938839088005,
-    "cost_reduction": 0.0760484659365368,
+    "lgbm_cost": 14.30230151029926,
+    "cost_reduction": 0.08001324921276187,
     "normal_premium": 0.01081056734513175
   }
 }

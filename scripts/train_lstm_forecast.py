@@ -56,7 +56,7 @@ def build_windows(panel: pd.DataFrame, input_weeks: int = INPUT_WEEKS, target_in
         n = len(g)
         for end in range(input_weeks, n - HORIZON + 1):
             x = vals[end - input_weeks:end]                       # 过去 12 周
-            y = vals[end:end + HORIZON, 0]                        # 未来 4 周销量
+            y = vals[end:end + HORIZON, 0]                        # 未来 4 周销售额
             d = dates[end:end + HORIZON]                          # 4 个目标日期
             X.append(x); Y.append(y); stores.append(store); tdates.append(d)
     return (np.asarray(X, dtype=np.float32), np.asarray(Y, dtype=np.float32),
@@ -216,6 +216,13 @@ def main() -> int:
         out[name]["improvement_vs_naive_pct"] = float((base - m) / base * 100)
         print(f"{name}: 相对 naive 改善 {(base-m)/base*100:+.2f}%")
 
+    # 同起点、同四步的 MA4 基准：用测试窗口最后四周的实际值外推。
+    ma4_raw = X[te][:, -4:, 0].mean(axis=1)
+    ma4_scaled = (ma4_raw - y_mu) / y_sd
+    ma4 = step_mae(np.repeat(ma4_scaled[:, None], HORIZON, axis=1), Ys[te])
+    out["ma4"] = {"step_mae": ma4.tolist(), "mean_mae": float(ma4.mean()),
+                  "improvement_attention_vs_ma4_pct": float((ma4.mean() - results["lstm_attention"].mean()) / ma4.mean() * 100)}
+    print(f"MA4 四步 MAE {ma4.mean():.4f}; Attention 相对 MA4 {(ma4.mean()-results['lstm_attention'].mean())/ma4.mean()*100:+.2f}%")
     out["naive_mean_mae"] = float(base)
     out["seed"] = args.seed
     out["epochs"] = args.epochs

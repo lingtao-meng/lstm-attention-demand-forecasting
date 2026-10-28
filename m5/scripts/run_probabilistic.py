@@ -278,6 +278,9 @@ def main() -> int:
     preds["order_base"] = preds["naive"] + preds["id"].map(base_map)
     preds["order_model"] = preds["q50"] + preds["id"].map(model_map)
     preds["order_normal"] = preds["naive"] + preds["id"].map(normal_map)
+    # 订货量不能为负：所有策略统一截到 0 后再算成本。
+    for col in ("order_base", "order_model", "order_normal"):
+        preds[col] = preds[col].clip(lower=0)
 
     def cost(order: np.ndarray) -> float:
         actual = preds["actual"].to_numpy()

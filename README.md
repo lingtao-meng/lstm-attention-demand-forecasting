@@ -28,7 +28,7 @@ Walmart Recruiting - Store Sales Forecasting，Kaggle 公开数据集。45 家�
 
 输入层（过去12周×6个特征）→ 双层双向 LSTM → Multi-Head Self-Attention → 残差连接 + LayerNorm → 全连接层 → 输出未来4周销量。
 
-可复现版本是 `scripts/train_lstm_forecast.py` 的四步点预测。旧 notebook/App 的“3 分位头”是早期演示，不再作为主结果；分位数预测在 `m5/` 模块里用 conformal 实现。
+可复现版本是 `scripts/train_lstm_forecast.py` 的四步点预测（目标为周销售额，不是商品件数）。旧 notebook/App 的“3 分位头”是早期演示，不再作为主结果；分位数预测在 `m5/` 模块里用 conformal 实现。
 
 主实验训练 25 个 epoch，按验证损失选最佳检查点；默认 Attention 模型约 20.3 万参数。在 Mac 上跑的。
 
@@ -46,6 +46,8 @@ Walmart Recruiting - Store Sales Forecasting，Kaggle 公开数据集。45 家�
 | **LSTM + Attention（旧口径）** | — | 待重跑；真实四步重跑见下节 **+7.7%** |
 
 这张表是旧口径，只作历史对照；当前可复现结果是 `scripts/train_lstm_forecast.py` 的四步点预测（相对 naive 约 +7.7%），不再用旧表里的百分比下结论。
+
+同一批 1,440 个测试起点、同样四步的 MA4 基准 MAE 是 0.1011；LSTM+Attention 是 0.1062，反而高 5.03%。所以 7.7% 只能限定为“相对四步 naive”，不能说胜 MA4，也不能说注意力提升了精度。
 
 旧稿这里写“LSTM 能学到独立时序模式、树模型打不过 LSTM”，但真实重跑只比 naive 好约 7.7%，且滚动回测方差很大；不能再用这句话下强结论。
 
@@ -165,9 +167,9 @@ python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 
 `m5/` 是同一主题下的扩展：M5 真实 Walmart 销售，100 个 item-store series，最后 26 周 holdout。
 
-- 点预测：LightGBM 残差，单窗口 FVA +7.4%；六折滚动 +4.8% ± 3.3%
-- 概率预测：P10/P50/P90 + conformal，80% 区间覆盖 76.8%
-- 订货：P50+conformal 的 newsvendor 成本 $15.70，比 naive+conformal 低 6.3%
+- 点预测：LightGBM 残差，单窗口 FVA +7.2%；六折滚动 +5.0% ± 3.3%
+- 概率预测：P10/P50/P90 + conformal，80% 区间覆盖 78.3%
+- 订货：P50+conformal 的 newsvendor 成本 $15.42，比 naive+conformal 低 8.0%
 - 分层：114 个节点，bottom-up 赢 MinT-OLS
 
 详细结果、图和复现命令见 [`m5/README.md`](m5/README.md)。
