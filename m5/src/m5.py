@@ -52,7 +52,12 @@ def weekly_panel(
         how="left",
     )
     long["date"] = pd.to_datetime(long["date"])
-    long["week"] = long["date"].dt.to_period("W")
+    # M5 的周是周日—周六；pandas 的 W 周是周一—周日，直接 to_period 会把
+    # 一个 M5 周切成两段，价格也会错位。先按 wm_yr_wk 分组，week 仅作展示。
+    long["week_start"] = long["date"] - pd.to_timedelta(
+        (long["date"].dt.weekday + 1) % 7, unit="D"
+    )
+    long["week"] = long["week_start"].dt.to_period("W")
     long["event"] = long["event_name_1"].notna().astype(int)
     long["snap"] = np.select(
         [long["state_id"].eq("CA"), long["state_id"].eq("TX"), long["state_id"].eq("WI")],
@@ -61,29 +66,30 @@ def weekly_panel(
     )
 
     weekly = (
-        long.groupby(ID_COLS + ["week"], observed=True, as_index=False)
-        .agg(sales=("sales", "sum"), event=("event", "max"), snap=("snap", "max"))
+        long.groupby(ID_COLS + ["wm_yr_wk"], observed=True, as_index=False)
+        .agg(sales=("sales", "sum"), event=("event", "max"), snap=("snap", "max"),
+             week=("week", "first"), week_start=("week_start", "first"))
         .sort_values(["id", "week"])
         .reset_index(drop=True)
     )
 
     if prices is not None and len(prices):
-        week_map = calendar[["wm_yr_wk", "week"]].drop_duplicates("wm_yr_wk")
         price_weekly = (
-            prices.merge(week_map, on="wm_yr_wk", how="inner")
-            .groupby(["store_id", "item_id", "week"], observed=True, as_index=False)["sell_price"]
+            prices.groupby(["store_id", "item_id", "wm_yr_wk"], observed=True, as_index=False)["sell_price"]
             .mean()
             .rename(columns={"sell_price": "price"})
         )
-        weekly = weekly.merge(price_weekly, on=["store_id", "item_id", "week"], how="left")
+        weekly = weekly.merge(
+            price_weekly, on=["store_id", "item_id", "wm_yr_wk"], how="left", validate="one_to_one"
+        )
         # 只用过去已知价格：ffill 不引入未来；前几周缺失就留 NaN，交给模型处理
         weekly["price"] = weekly.groupby("id", observed=True)["price"].ffill()
 
     week_order = {week: idx for idx, week in enumerate(sorted(weekly["week"].unique()))}
     weekly["week_index"] = weekly["week"].map(week_order)
-    weekly["week_of_year"] = weekly["week"].apply(lambda x: x.week)
-    weekly["month"] = weekly["week"].apply(lambda x: x.start_time.month)
-    weekly["year"] = weekly["week"].apply(lambda x: x.start_time.year)
+    weekly["week_of_year"] = weekly["week_start"].dt.isocalendar().week.astype(int)
+    weekly["month"] = weekly["week_start"].dt.month
+    weekly["year"] = weekly["week_start"].dt.year
     return weekly
 
 

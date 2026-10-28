@@ -1,35 +1,35 @@
 {
-  "holdout_start": "2015-10-26/2015-11-01",
+  "holdout_start": "2015-10-19/2015-10-25",
   "critical_ratio": 0.5454545454545454,
-  "conformal_adjustment": 0.7127959573207328,
-  "coverage_80": 0.785,
-  "interval_width_80": 64.42526541223368,
+  "conformal_adjustment": 0.984445082361765,
+  "coverage_80": 0.7676923076923077,
+  "interval_width_80": 66.08168838849124,
   "metrics": [
     {
       "quantile": 0.1,
-      "pinball": 4.632080367705591
+      "pinball": 7.03673234692428
     },
     {
       "quantile": 0.5,
-      "pinball": 11.076074521271682
+      "pinball": 12.698694469138536
     },
     {
       "quantile": 0.9,
-      "pinball": 5.736898505826895
+      "pinball": 6.097726268962295
     }
   ],
   "newsvendor": [
     {
       "policy": "naive + conformal",
-      "cost": 14.807459807692307
+      "cost": 16.75269923076923
     },
     {
       "policy": "P50 + conformal",
-      "cost": 12.957116297464347
+      "cost": 15.69584699530683
     },
     {
       "policy": "naive + normal",
-      "cost": 13.900037963252242
+      "cost": 15.869482693191856
     }
   ]
 }

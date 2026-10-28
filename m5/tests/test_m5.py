@@ -32,7 +32,7 @@ class TestWeeklyPanel(unittest.TestCase):
             {
                 "d": [f"d_{i}" for i in range(1, 15)],
                 "date": pd.date_range("2020-01-06", periods=14),
-                "wm_yr_wk": [1] * 14,
+                "wm_yr_wk": [1] * 7 + [2] * 7,
                 "event_name_1": [None] * 14,
                 "snap_CA": [1] * 14,
                 "snap_TX": [0] * 14,
