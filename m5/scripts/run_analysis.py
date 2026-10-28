@@ -260,8 +260,12 @@ def main() -> int:
     ap.add_argument("--direct", action="store_true", help="predict sales directly instead of the naive residual")
     args = ap.parse_args()
 
-    RESULTS.mkdir(exist_ok=True)
-    IMAGES.mkdir(exist_ok=True)
+    global RESULTS, IMAGES
+    if args.direct:
+        RESULTS = ROOT / "results" / "direct"
+        IMAGES = ROOT / "images" / "direct"
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    IMAGES.mkdir(parents=True, exist_ok=True)
 
     sales, calendar, prices = load_inputs(Path(args.data_dir))
     selected = select_series(sales, args.series, args.seed)

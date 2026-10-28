@@ -195,3 +195,6 @@ images/                   预测示例、概率区间、校准、成本前沿、
 ## 数据来源
 
 M5 Forecasting – Accuracy（Kaggle）。这里通过 Hugging Face 的公开镜像下载，文件是 `calendar.csv`、`sales_train_validation.csv`、`sell_prices.csv`。数据版权归原竞赛/沃尔玛所有，本模块只用于学习和复现。
+
+
+直接预测（direct）现在单独写到 `results/direct/` 和 `images/direct/`，不会覆盖残差模型的预测、图和成本文件。
