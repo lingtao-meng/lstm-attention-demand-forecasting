@@ -45,6 +45,11 @@ class TestConformal(unittest.TestCase):
         self.assertGreaterEqual(value, 5)
         self.assertLessEqual(value, 10)
 
+    def test_conformal_adjustment_exact_order_statistic(self):
+        scores = np.arange(1, 17, dtype=float)  # n=16
+        # alpha=0.2 -> k=ceil(17*0.8)=14 -> 14th smallest = 14.0
+        self.assertEqual(conformal_adjustment(scores, 0.2), 14.0)
+
     def test_finite_sample_uses_exact_order_statistic(self):
         residuals = np.arange(1, 17, dtype=float)  # n=16
         # k = ceil(17 * 0.545) = 10 -> 10th smallest value = 10.0

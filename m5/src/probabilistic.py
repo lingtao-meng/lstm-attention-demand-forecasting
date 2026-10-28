@@ -29,8 +29,10 @@ def conformal_adjustment(scores: np.ndarray, alpha: float) -> float:
     n = len(scores)
     if n == 0:
         return 0.0
-    level = min(1.0, np.ceil((n + 1) * (1 - alpha)) / n)
-    return float(np.quantile(scores, level, method="higher"))
+    # 与 conformal_quantile 一样，直接取第 k 个次序统计量；
+    # 不能再把 k/n 传给 np.quantile("higher")，否则会多保守一阶。
+    k = min(max(int(np.ceil((n + 1) * (1 - alpha))), 1), n)
+    return float(np.sort(scores)[k - 1])
 
 
 def conformal_quantile(residuals: np.ndarray, tau: float) -> float:

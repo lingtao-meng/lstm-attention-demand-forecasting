@@ -1,9 +1,9 @@
 {
   "holdout_start": "2015-10-19/2015-10-25",
   "critical_ratio": 0.5454545454545454,
-  "conformal_adjustment": 1.24316893671579,
+  "conformal_adjustment": 1.2424530398628928,
   "coverage_80": 0.808076923076923,
-  "interval_width_80": 66.20089617298446,
+  "interval_width_80": 66.19946437927865,
   "metrics": [
     {
       "quantile": 0.1,
