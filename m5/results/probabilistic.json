@@ -21,11 +21,11 @@
   "newsvendor": [
     {
       "policy": "naive + conformal",
-      "cost": 15.121362500000002
+      "cost": 14.646787307692307
     },
     {
       "policy": "P50 + conformal",
-      "cost": 13.843296734922703
+      "cost": 13.2804345065627
     },
     {
       "policy": "naive + normal",

@@ -45,6 +45,11 @@ class TestConformal(unittest.TestCase):
         self.assertGreaterEqual(value, 5)
         self.assertLessEqual(value, 10)
 
+    def test_finite_sample_uses_exact_order_statistic(self):
+        residuals = np.arange(1, 17, dtype=float)  # n=16
+        # k = ceil(17 * 0.545) = 10 -> 10th smallest value = 10.0
+        self.assertEqual(conformal_quantile(residuals, 0.545), 10.0)
+
 
 class TestIntervals(unittest.TestCase):
     def test_coverage_and_width(self):

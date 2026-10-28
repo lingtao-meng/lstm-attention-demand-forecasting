@@ -116,8 +116,8 @@ FVA 本来就不是模型属性，跟窗口、品类、促销节奏都有关系�
 
 | 策略 | 成本（$/series-week） |
 |---|---|
-| naive + conformal | $15.12 |
-| P50 + conformal | **$13.84（−8.4%）** |
+| naive + conformal | $14.65 |
+| P50 + conformal | **$13.28（−9.3%）** |
 | naive + normal | $14.28 |
 
 ![概率版 newsvendor](images/probabilistic_newsvendor.png)

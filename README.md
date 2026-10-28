@@ -169,7 +169,7 @@ python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 
 - 点预测：LightGBM 残差，单窗口 FVA +6.4%；六折滚动 +4.3% ± 2.9%
 - 概率预测：P10/P50/P90 + conformal，80% 区间覆盖 80.8%
-- 订货：P50+conformal 的 newsvendor 成本 $13.84，比 naive+conformal 低 8.4%
+- 订货：P50+conformal 的 newsvendor 成本 $13.28，比 naive+conformal 低 9.3%
 - 分层：114 个节点，bottom-up 赢 MinT-OLS
 
 详细结果、图和复现命令见 [`m5/README.md`](m5/README.md)。

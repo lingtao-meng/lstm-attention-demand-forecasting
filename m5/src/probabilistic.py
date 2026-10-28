@@ -39,8 +39,11 @@ def conformal_quantile(residuals: np.ndarray, tau: float) -> float:
     n = len(residuals)
     if n == 0:
         return 0.0
-    level = min(1.0, np.ceil((n + 1) * tau) / n)
-    return float(np.quantile(residuals, level, method="higher"))
+    # Split-conformal finite-sample order statistic: k = ceil((n+1)*tau),
+    # clipped to [1, n].  Do not pass k/n to np.quantile("higher"): that
+    # returns the (k+1)-th order statistic for n=16, tau≈0.545.
+    k = min(max(int(np.ceil((n + 1) * tau)), 1), n)
+    return float(np.sort(residuals)[k - 1])
 
 
 def dm_test(errors_a: np.ndarray, errors_b: np.ndarray, power: float = 1.0) -> tuple[float, float]:

@@ -1,4 +1,4 @@
 policy,cost
-naive + conformal,15.121362500000002
-P50 + conformal,13.843296734922703
+naive + conformal,14.646787307692307
+P50 + conformal,13.2804345065627
 naive + normal,14.278411858832232
