@@ -80,26 +80,31 @@ def forecast_level(frame: pd.DataFrame, holdout: int) -> pd.DataFrame:
     test = test.dropna(subset=features).copy()
     model = fit_residual(train, features)
     test["pred"] = np.maximum(0, test["naive"].to_numpy() + model.predict(test[features]))
-    return test[["id", "week", "sales", "pred"]]
+    return test[["id", "week", "week_start", "month", "year", "sales", "pred"]]
 
 
 def make_frames(weekly: pd.DataFrame):
-    bottom = weekly[["id", "store_id", "state_id", "week", "sales", "event", "snap", "price"]].copy()
+    bottom = weekly[["id", "store_id", "state_id", "week", "week_start",
+                     "week_of_year", "month", "year", "sales", "event", "snap", "price"]].copy()
+    meta = weekly[["week", "week_start", "week_of_year", "month", "year"]].drop_duplicates("week")
     store = (
         weekly.groupby(["store_id", "week"], observed=True, as_index=False)
         .agg(sales=("sales", "sum"), event=("event", "max"), snap=("snap", "max"))
         .rename(columns={"store_id": "id"})
+        .merge(meta, on="week", how="left")
     )
     store["store_id"] = store["id"]
     state = (
         weekly.groupby(["state_id", "week"], observed=True, as_index=False)
         .agg(sales=("sales", "sum"), event=("event", "max"), snap=("snap", "max"))
         .rename(columns={"state_id": "id"})
+        .merge(meta, on="week", how="left")
     )
     state["store_id"] = state["id"]
     total = (
         weekly.groupby("week", as_index=False)
         .agg(sales=("sales", "sum"), event=("event", "max"), snap=("snap", "max"))
+        .merge(meta, on="week", how="left")
     )
     total["id"] = "total"
     total["store_id"] = "total"

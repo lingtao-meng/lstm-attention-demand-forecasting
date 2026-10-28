@@ -1,38 +1,38 @@
 {
   "nodes": 114,
   "bottom_nodes": 100,
-  "holdout_start": "2015-10-26/2015-11-01",
+  "holdout_start": "2015-10-19/2015-10-25",
   "results": [
     {
       "method": "base",
-      "bottom_mae": 26.74899160270818,
-      "store_mae": 170.37115802861695,
-      "state_mae": 480.4576589479552,
-      "total_mae": 1257.3837703556574,
-      "coherence_gap": 1556.4559171468409
+      "bottom_mae": 24.38237940525047,
+      "store_mae": 149.51692671695804,
+      "state_mae": 390.0254727309509,
+      "total_mae": 1089.2509733926645,
+      "coherence_gap": 1075.0095136931413
     },
     {
       "method": "bottom-up",
-      "bottom_mae": 26.74899160270818,
-      "store_mae": 170.52587987972,
-      "state_mae": 449.0440034806282,
-      "total_mae": 1009.6970376800535,
+      "bottom_mae": 24.38237940525047,
+      "store_mae": 147.79688766725658,
+      "state_mae": 366.2354153598947,
+      "total_mae": 800.7349566655686,
       "coherence_gap": 0.0
     },
     {
       "method": "top-down",
-      "bottom_mae": 43.78029522786402,
-      "store_mae": 222.45075979009266,
-      "state_mae": 535.5248462014814,
-      "total_mae": 1257.3837703556578,
+      "bottom_mae": 41.658718038946624,
+      "store_mae": 198.22463265555783,
+      "state_mae": 446.1584733642897,
+      "total_mae": 1089.2509733926647,
       "coherence_gap": 0.0
     },
     {
       "method": "MinT-OLS",
-      "bottom_mae": 28.716776217455873,
-      "store_mae": 179.8367086574518,
-      "state_mae": 493.5954429012591,
-      "total_mae": 1206.3856771801534,
+      "bottom_mae": 25.958306250903323,
+      "store_mae": 157.30095366684628,
+      "state_mae": 400.65224065995807,
+      "total_mae": 1013.340585215338,
       "coherence_gap": 0.0
     }
   ]

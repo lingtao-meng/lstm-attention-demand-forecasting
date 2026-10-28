@@ -167,9 +167,9 @@ python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 
 `m5/` 是同一主题下的扩展：M5 真实 Walmart 销售，100 个 item-store series，最后 26 周 holdout。
 
-- 点预测：LightGBM 残差，单窗口 FVA +7.2%；六折滚动 +5.0% ± 3.3%
-- 概率预测：P10/P50/P90 + conformal，80% 区间覆盖 78.3%
-- 订货：P50+conformal 的 newsvendor 成本 $15.42，比 naive+conformal 低 8.0%
+- 点预测：LightGBM 残差，单窗口 FVA +6.4%；六折滚动 +4.3% ± 2.9%
+- 概率预测：P10/P50/P90 + conformal，80% 区间覆盖 80.8%
+- 订货：P50+conformal 的 newsvendor 成本 $13.84，比 naive+conformal 低 8.4%
 - 分层：114 个节点，bottom-up 赢 MinT-OLS
 
 详细结果、图和复现命令见 [`m5/README.md`](m5/README.md)。

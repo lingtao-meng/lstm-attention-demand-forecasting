@@ -76,6 +76,7 @@ def newsvendor(preds: pd.DataFrame, model: str, underage: float = 0.30, overage:
         q_emp = float(np.quantile(error, cr))
         q_norm = float(error.mean() + stats.norm.ppf(cr) * error.std(ddof=1))
         co, cu = overage * price, underage * price
+        forecast = chunk[model].to_numpy(dtype=float)
         rows.append(
             {
                 "id": series,
@@ -83,8 +84,8 @@ def newsvendor(preds: pd.DataFrame, model: str, underage: float = 0.30, overage:
                 "price": price,
                 "q_empirical": q_emp,
                 "q_normal": q_norm,
-                "cost_empirical": _cost(error, q_emp, cu, co),
-                "cost_normal": _cost(error, q_norm, cu, co),
+                "cost_empirical": _order_cost(chunk["sales"].to_numpy(), forecast, q_emp, cu, co),
+                "cost_normal": _order_cost(chunk["sales"].to_numpy(), forecast, q_norm, cu, co),
             }
         )
     detail = pd.DataFrame(rows)
@@ -97,9 +98,19 @@ def newsvendor(preds: pd.DataFrame, model: str, underage: float = 0.30, overage:
             if not np.isfinite(price) or price <= 0:
                 price = 1.0
             q = float(np.quantile(error, service))
-            costs.append(_cost(error, q, underage * price, overage * price))
+            costs.append(_order_cost(chunk["sales"].to_numpy(), chunk[model].to_numpy(),
+                                     q, underage * price, overage * price))
         frontier.append({"service_level": service, "expected_cost": float(np.mean(costs))})
     return detail, pd.DataFrame(frontier)
+
+
+def _order_cost(actual, forecast, q: float, underage_cost: float, overage_cost: float) -> float:
+    """Cost with a non-negative order quantity: Q = max(0, forecast + q)."""
+    actual = np.asarray(actual, dtype=float)
+    order = np.maximum(0.0, np.asarray(forecast, dtype=float) + q)
+    return float(np.mean(np.where(actual > order,
+                                  underage_cost * (actual - order),
+                                  overage_cost * (order - actual))))
 
 
 def _cost(errors: np.ndarray, order: float, underage_cost: float, overage_cost: float) -> float:

@@ -77,6 +77,8 @@ def weekly_panel(
         .sort_values(["id", "week"])
         .reset_index(drop=True)
     )
+    # 只保留实际有 7 天销量的零售周；末尾 2 天不能按整周评价。
+    weekly = weekly[weekly["n_days"] == 7].reset_index(drop=True)
 
     if prices is not None and len(prices):
         price_weekly = (
