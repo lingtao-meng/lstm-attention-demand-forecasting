@@ -288,7 +288,7 @@ def main() -> int:
     else:
         preds["lgbm"] = np.maximum(0, test["naive"].to_numpy() + prediction)
     output = preds.copy()
-    output["week"] = output["week"].astype(str)
+    output["week"] = output["week_start"].dt.strftime("%Y-%m-%d")
     output.to_csv(RESULTS / "predictions_test.csv", index=False)
 
     models = evaluate(preds)

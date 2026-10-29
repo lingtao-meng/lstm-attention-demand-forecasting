@@ -258,6 +258,7 @@ def main() -> int:
     preds["q90"] = quantiles[0.9]["test"]
     preds["lower80"] = lower
     preds["upper80"] = upper
+    preds["week"] = preds["week_start"].dt.strftime("%Y-%m-%d")
     preds.to_csv(RESULTS / "quantile_predictions.csv", index=False)
 
     cr = args.underage / (args.underage + args.overage)

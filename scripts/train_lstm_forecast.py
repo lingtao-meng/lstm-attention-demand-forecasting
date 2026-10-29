@@ -223,6 +223,17 @@ def main() -> int:
     out["ma4"] = {"step_mae": ma4.tolist(), "mean_mae": float(ma4.mean()),
                   "improvement_attention_vs_ma4_pct": float((ma4.mean() - results["lstm_attention"].mean()) / ma4.mean() * 100)}
     print(f"MA4 四步 MAE {ma4.mean():.4f}; Attention 相对 MA4 {(ma4.mean()-results['lstm_attention'].mean())/ma4.mean()*100:+.2f}%")
+    if not args.folds:
+        # 不带 --folds 的主实验不应把上一次五折结果覆盖掉。
+        prev_path = RESULTS / "lstm_split_experiment.json"
+        if prev_path.exists():
+            try:
+                prev = json.loads(prev_path.read_text(encoding="utf-8"))
+                for key in ("rolling_cv", "rolling_cv_summary"):
+                    if key in prev:
+                        out[key] = prev[key]
+            except (json.JSONDecodeError, OSError):
+                pass
     out["naive_mean_mae"] = float(base)
     out["seed"] = args.seed
     out["epochs"] = args.epochs
