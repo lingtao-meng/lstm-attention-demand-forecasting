@@ -110,7 +110,7 @@ def plot_forecast(preds: pd.DataFrame, images: Path) -> None:
     for ax, series in zip(axes, top):
         view = preds[preds["id"] == series].sort_values("week").tail(30)
         x = np.arange(len(view))
-        labels = view["week"].dt.start_time.dt.strftime("%b %d")
+        labels = view["week_start"].dt.strftime("%b %d") if "week_start" in view.columns else view["week"].dt.start_time.dt.strftime("%b %d")
         ax.fill_between(x, view["lower80"], view["upper80"], color=TEAL, alpha=0.18, label="80% interval")
         ax.plot(x, view["actual"], color=INK, linewidth=1.8, label="actual")
         ax.plot(x, view["q50"], color=TEAL, linewidth=2.0, label="P50")
@@ -251,7 +251,7 @@ def main() -> int:
         ]
     )
 
-    preds = test[["id", "week", "sales", "price", "naive"]].copy()
+    preds = test[["id", "week", "week_start", "sales", "price", "naive"]].copy()
     preds["actual"] = preds["sales"]
     preds["q10"] = quantiles[0.1]["test"]
     preds["q50"] = quantiles[0.5]["test"]

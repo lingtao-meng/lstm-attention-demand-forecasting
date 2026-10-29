@@ -128,7 +128,7 @@ def plot_examples(preds: pd.DataFrame, weekly: pd.DataFrame, holdout_start, imag
         forecast = preds[preds["id"] == series].sort_values("week")
         n, h = len(history), len(forecast)
         x = np.arange(n)
-        dates = history["week"].dt.start_time
+        dates = history["week_start"] if "week_start" in history.columns else history["week"].dt.start_time
         ax.axvspan(n - h - 0.5, n - 0.5, color="#f6efe3", zorder=0)
         ax.plot(x, history["sales"], color=INK, linewidth=1.8, label="actual")
         ax.plot(x[-h:], forecast["naive"], color=AMBER, linewidth=1.4, linestyle="--", label="naive")
@@ -281,7 +281,7 @@ def main() -> int:
     print(f"train {len(train):,} rows, test {len(test):,} rows, holdout starts {holdout_start}")
 
     model = train_model(train, features, direct=args.direct)
-    preds = test[["id", "week", "sales", "price", "naive", "seasonal", "ma4"]].copy()
+    preds = test[["id", "week", "week_start", "sales", "price", "naive", "seasonal", "ma4"]].copy()
     prediction = model.predict(test[features])
     if args.direct:
         preds["lgbm"] = np.maximum(0, prediction)
