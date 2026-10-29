@@ -178,7 +178,7 @@ python scripts/forecast_diagnostics.py --holdout 12 --underage 0.4
 
 最初打算用 Google 的 Temporal Fusion Transformer（TFT），结果 pytorch-forecasting 和 pytorch-lightning 的版本冲突搞了很久没搞定。最后放弃了，直接用 PyTorch 从零写 LSTM+Attention。回头看这个决定反而是对的——手写一遍对底层理解深了很多。
 
-**关于 MAE 的口径（重要）**：LSTM 那一行的美元值（调优前 $43,504、调优后 ~$35,000）是从标准化空间反推的近似值；Naive / ARIMA / Prophet 是在原始美元空间直接测的。**旧稿的 22.8% → 37.9% 没有真实训练支撑；真实四步重跑约 +7.7%，滚动回测不稳定，不要再用 37.9%。**
+**关于 MAE 的口径（重要）**：当前主表统一用同一批 1,440 个测试起点、四步目标的标准化 MAE，不再混用旧美元反推值和不同步长的 ARIMA/Prophet 结果。旧稿的 22.8% → 37.9% 已废弃；真实四步重跑约 +7.7%，滚动回测不稳定。
 
 ## 运行
 
