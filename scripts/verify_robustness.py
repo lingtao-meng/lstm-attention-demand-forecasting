@@ -74,6 +74,11 @@ def check(root=ROOT):
     truth, naive, ma4 = walmart_targets(root, load(root / "results/lstm_split_experiment.json"))
     for key, value in [("truth", truth), ("naive", naive), ("ma4", ma4)]:
         np.testing.assert_allclose(a[key], value, atol=2e-6, rtol=0)
+    # Check target reconstruction separately, then evaluate the same frozen
+    # arrays on every platform. Float64 reductions avoid float32 FVA drift.
+    truth, naive, ma4 = (a[key].astype(np.float64) for key in ['truth', 'naive', 'ma4'])
+    if config.get('metric_accumulator') != 'float64':
+        raise ValueError('Seed metrics must use float64 accumulation')
     if len(runs) != 10 or {(r['seed'], r['model']) for r in runs} != {(s, m) for s in config['seeds'] for m in ['lstm_attention', 'lstm_pure']}:
         raise ValueError("All ten prespecified runs must be present exactly once")
     if summary['completed_runs'] != len(runs):
@@ -84,17 +89,17 @@ def check(root=ROOT):
         raise ValueError('Seed CSV/JSON run counts differ')
     metric_map = {(int(row['seed']), row['model']): row for row in metric_rows}
     naive_mae, ma4_mae = float(np.abs(truth - naive).mean()), float(np.abs(truth - ma4).mean())
-    near(naive_mae, summary['naive_mae'], 'seed naive MAE')
-    near(ma4_mae, summary['ma4_mae'], 'seed MA4 MAE')
+    near(naive_mae, summary['naive_mae'], 'seed naive MAE', atol=1e-10)
+    near(ma4_mae, summary['ma4_mae'], 'seed MA4 MAE', atol=1e-10)
     for r in runs:
-        pred = a[r['array_key']]
+        pred = a[r['array_key']].astype(np.float64)
         if pred.shape != truth.shape or not np.isfinite(pred).all() or r['epochs'] != 25:
             raise ValueError('Invalid saved LSTM run')
         error = np.abs(pred - truth)
-        near(float(error.mean()), r['mae'], 'seed run MAE')
+        near(float(error.mean()), r['mae'], 'seed run MAE', atol=1e-10)
         near(float(metric_map[r['seed'], r['model']]['mae']), r['mae'], 'seed CSV/JSON MAE')
-        near((1 - float(error.mean()) / naive_mae) * 100, r['fva_naive_pct'], 'seed run FVA')
-        np.testing.assert_allclose(error.mean(axis=0), r['step_mae'], atol=2e-6, rtol=0)
+        near((1 - float(error.mean()) / naive_mae) * 100, r['fva_naive_pct'], 'seed run FVA', atol=1e-10)
+        np.testing.assert_allclose(error.mean(axis=0), r['step_mae'], atol=1e-10, rtol=0)
     for model in summary['models']:
         values = [r for r in runs if r['model'] == model['model']]
         near(np.mean([r['mae'] for r in values]), model['mae_mean'], 'seed mean')
@@ -185,6 +190,7 @@ def report(root=ROOT):
              '## 45店：五种子完整训练', '',
              '预先固定种子7、17、42、73、101；每种子分别训练Attention与纯LSTM，共10次，每次25个epoch。时间切分、12周输入、四步输出、默认结构和验证集选检查点规则相同。',
              '所有种子都报告，不根据测试表现挑选种子；种子重复衡量训练随机性，不等同于新的时间回测或独立数据集。', '',
+             '目标与简单基准先从公开CSV独立重建核对，指标再使用冻结评估数组并以float64累计，避免不同平台的float32汇总误差被FVA比值放大。可用 `python scripts/recompute_seed_metrics.py --write` 复算指标，无需重新训练。', '',
              '| 种子 | Attention MAE | 纯LSTM MAE | Attention相对naive | 纯LSTM相对naive |', '|---|---:|---:|---:|---:|']
     for seed in config['seeds']:
         a = next(r for r in runs if r['seed'] == seed and r['model'] == 'lstm_attention')

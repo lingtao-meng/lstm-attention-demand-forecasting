@@ -41,5 +41,6 @@
     "device": "CPU",
     "deterministic_algorithms": true
   },
-  "no_seed_selection": true
+  "no_seed_selection": true,
+  "metric_accumulator": "float64"
 }

@@ -43,8 +43,9 @@ def main() -> int:
     naive = (np.repeat(x[te, -1, 0][:, None], 4, axis=1) - y_mu) / y_sd
     ma4 = (np.repeat(x[te, -4:, 0].mean(axis=1)[:, None], 4, axis=1) - y_mu) / y_sd
     truth = ys[te]
-    base = float(np.abs(naive - truth).mean())
-    ma4_error = float(np.abs(ma4 - truth).mean())
+    truth64 = truth.astype(np.float64)
+    base = float(np.abs(naive.astype(np.float64) - truth64).mean())
+    ma4_error = float(np.abs(ma4.astype(np.float64) - truth64).mean())
     arrays = {"truth": truth, "naive": naive, "ma4": ma4,
               "store_ids": stores[te], "target_dates": target_dates[te].astype("datetime64[D]").astype(str)}
     config = {
@@ -58,6 +59,7 @@ def main() -> int:
         "environment": {"python": platform.python_version(), "torch": torch.__version__, "numpy": np.__version__,
                         "platform": platform.platform(), "device": "CPU", "deterministic_algorithms": True},
         "no_seed_selection": True,
+        "metric_accumulator": "float64",
     }
     (args.outdir / "config.json").write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
     rows = []
@@ -70,7 +72,7 @@ def main() -> int:
                 pred = model(torch.from_numpy(xs[te])).numpy()
             array_key = f"seed_{seed}_{name}"
             arrays[array_key] = pred
-            error = np.abs(pred - truth)
+            error = np.abs(pred.astype(np.float64) - truth64)
             mean_error = float(error.mean())
             row = {"seed": seed, "model": name, "mae": mean_error,
                    "fva_naive_pct": (1 - mean_error / base) * 100,
