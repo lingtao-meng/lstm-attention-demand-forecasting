@@ -26,6 +26,9 @@ jobs:
       - name: Saved predictions, order costs and report consistency
         run: python scripts/verify_results.py
 
+      - name: Robustness predictions and calibration consistency
+        run: python scripts/verify_robustness.py
+
       - name: Compile modules
         run: python -m compileall -q scripts m5/src m5/scripts
 
@@ -37,11 +40,7 @@ jobs:
 
       - name: M5 tests
         working-directory: m5
-        run: |
-          python tests/test_m5.py
-          python tests/test_evaluation.py
-          python tests/test_probabilistic.py
-          python tests/test_hierarchy.py
+        run: python -m unittest discover -s tests -v
 
       - name: Check outputs
         run: |

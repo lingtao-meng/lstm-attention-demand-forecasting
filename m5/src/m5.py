@@ -22,11 +22,25 @@ def load_sales(path: Path) -> pd.DataFrame:
     return pd.read_csv(path, dtype=dtypes)
 
 
-def select_series(sales: pd.DataFrame, n_series: int = 100, seed: int = 42) -> pd.DataFrame:
-    """Top 5 series per store plus a random sample, so the panel is not all best-sellers."""
+def select_series(
+    sales: pd.DataFrame, n_series: int = 100, seed: int = 42,
+    selection_days: list[str] | None = None,
+) -> pd.DataFrame:
+    """Top 5 per store plus random; optionally score/qualify using history only.
+
+    ``selection_days`` limits both the ranking and the nonzero eligibility
+    filter. Other daily columns are retained for subsequent model evaluation.
+    Omitting it preserves the original full-period sample.
+    """
     d_cols = [c for c in sales.columns if c.startswith("d_")]
+    if selection_days is not None:
+        if not selection_days or not set(selection_days).issubset(d_cols):
+            raise ValueError("selection_days must be a nonempty list of available daily columns")
+        d_cols = selection_days
     total = sales[d_cols].sum(axis=1)
     sales = sales.assign(total=total)
+    if selection_days is not None:
+        sales = sales[sales["total"] > 0]
 
     top = sales.sort_values("total", ascending=False).groupby("store_id", observed=True).head(5)
     remaining = sales.drop(index=top.index)
@@ -35,6 +49,47 @@ def select_series(sales: pd.DataFrame, n_series: int = 100, seed: int = 42) -> p
     random = remaining.sample(n=min(n_random, len(remaining)), random_state=seed)
     selected = pd.concat([top, random], ignore_index=True)
     return selected.drop(columns=["total"])
+
+
+def selection_history(
+    sales: pd.DataFrame, calendar: pd.DataFrame, *, holdout: int = 26,
+    gap_weeks: int = 16, test_start: str | pd.Timestamp | None = None,
+) -> tuple[list[str], dict]:
+    """Select daily columns strictly before an independent calibration block.
+
+    Week boundaries come from the supplied retail calendar and are restricted
+    to days actually present in the sales table, excluding incomplete weeks.
+    """
+    d_cols = {c for c in sales.columns if c.startswith("d_")}
+    available = calendar[calendar["d"].isin(d_cols)].copy()
+    available["date"] = pd.to_datetime(available["date"])
+    complete = available.groupby("wm_yr_wk")["date"].nunique()
+    available = available[available["wm_yr_wk"].isin(complete[complete == 7].index)]
+    starts = available.groupby("wm_yr_wk")["date"].min().sort_values()
+    if gap_weeks < 1 or holdout < 1:
+        raise ValueError("holdout and gap_weeks must be positive")
+    if test_start is None:
+        if len(starts) <= holdout + gap_weeks:
+            raise ValueError("Not enough complete retail weeks for selection/calibration/test")
+        test_date = starts.iloc[-holdout]
+    else:
+        test_date = pd.Timestamp(test_start)
+        if test_date not in set(starts):
+            raise ValueError("test_start must be the start of a complete retail week")
+    before_test = starts[starts < test_date]
+    if len(before_test) <= gap_weeks:
+        raise ValueError("Not enough history before calibration")
+    calibration_start = before_test.iloc[-gap_weeks]
+    history = available[available["date"] < calibration_start].sort_values("date")
+    days = history["d"].tolist()
+    return days, {
+        "selection_start": str(history["date"].min().date()),
+        "selection_end": str(history["date"].max().date()),
+        "calibration_start": str(calibration_start.date()),
+        "test_start": str(test_date.date()),
+        "selection_days": len(days),
+        "selection_gap_weeks": gap_weeks,
+    }
 
 
 def weekly_panel(

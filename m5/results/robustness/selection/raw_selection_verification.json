@@ -1,0 +1,123 @@
+{
+  "checks": [
+    {
+      "policy": "full_period",
+      "case": "main",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "full_period",
+      "case": "fold_1",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "full_period",
+      "case": "fold_2",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "full_period",
+      "case": "fold_3",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "full_period",
+      "case": "fold_4",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "full_period",
+      "case": "fold_5",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "full_period",
+      "case": "fold_6",
+      "selection_end": "2016-04-24",
+      "selection_days": 1913,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "main",
+      "selection_end": "2015-07-03",
+      "selection_days": 1617,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "fold_1",
+      "selection_end": "2015-07-03",
+      "selection_days": 1617,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "fold_2",
+      "selection_end": "2015-01-02",
+      "selection_days": 1435,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "fold_3",
+      "selection_end": "2014-07-04",
+      "selection_days": 1253,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "fold_4",
+      "selection_end": "2014-01-03",
+      "selection_days": 1071,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "fold_5",
+      "selection_end": "2013-07-05",
+      "selection_days": 889,
+      "series": 100,
+      "independent_ranking_match": true
+    },
+    {
+      "policy": "train_period",
+      "case": "fold_6",
+      "selection_end": "2013-01-04",
+      "selection_days": 707,
+      "series": 100,
+      "independent_ranking_match": true
+    }
+  ],
+  "data_sha256": {
+    "sales_train_validation.csv": "f368e66ed1dbecb48b2cc8fc589bf68b3deddbbb36bf5c88b4d6d0a09b9b6724",
+    "calendar.csv": "d12b5914ef03e66649adf5dd9e996e6602251c22b7a6af8f1f7e3aa12f8860f5",
+    "sell_prices.csv": "9da3ad1f8b8ccacdbdc70612191dd375ec24a4ac6625c24b75b3bc60b0bed2ef"
+  },
+  "data_hashes_verified": true,
+  "method": "Independent prefix sums, nonzero eligibility, per-store top-five and seeded random sampling; no select_series/selection_history call."
+}

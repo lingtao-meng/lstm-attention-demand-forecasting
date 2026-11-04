@@ -1,0 +1,39 @@
+{
+  "completed_runs": 10,
+  "seeds": [
+    7,
+    17,
+    42,
+    73,
+    101
+  ],
+  "naive_mae": 0.11511039733886719,
+  "ma4_mae": 0.10114245861768723,
+  "models": [
+    {
+      "model": "lstm_attention",
+      "runs": 5,
+      "mae_mean": 0.10343216061592102,
+      "mae_std_ddof1": 0.0038350465385347788,
+      "fva_naive_mean_pct": 10.145249250219551,
+      "fva_naive_std_ddof1_pct": 3.331624794279003,
+      "wins_vs_naive": 5,
+      "wins_vs_ma4": 2
+    },
+    {
+      "model": "lstm_pure",
+      "runs": 5,
+      "mae_mean": 0.1003951147198677,
+      "mae_std_ddof1": 0.003329621218128238,
+      "fva_naive_mean_pct": 12.783625944474823,
+      "fva_naive_std_ddof1_pct": 2.8925460211264413,
+      "wins_vs_naive": 5,
+      "wins_vs_ma4": 4
+    }
+  ],
+  "attention_minus_pure_mae_mean": 0.0030370458960533144,
+  "attention_minus_pure_mae_std_ddof1": 0.004624246486347,
+  "attention_wins_paired_seeds": 1,
+  "elapsed_seconds": 183.32588283299992,
+  "scope": "Fixed four-step holdout, 25 epochs per run; seeds are initialization/training repeats, not new temporal folds or independent datasets."
+}

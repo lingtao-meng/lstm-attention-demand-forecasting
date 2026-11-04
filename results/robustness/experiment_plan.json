@@ -1,0 +1,57 @@
+{
+  "base_sha": "b3dc682cb9d5da9ee2b7e4cd5065bd4bf61e7d16",
+  "lstm": {
+    "seeds": [
+      7,
+      17,
+      42,
+      73,
+      101
+    ],
+    "models": [
+      "lstm_attention",
+      "lstm_pure"
+    ],
+    "epochs_per_model": 25,
+    "input_weeks": 12,
+    "horizon": 4,
+    "hidden": 64,
+    "layers": 2,
+    "dropout": 0.2,
+    "learning_rate": 0.001,
+    "checkpoint_selection": "validation SmoothL1 only",
+    "cpu_threads": 2,
+    "no_seed_selection": true
+  },
+  "m5": {
+    "selection_policies": [
+      "full_period",
+      "train_period"
+    ],
+    "series": 100,
+    "seed": 42,
+    "holdout_weeks": 26,
+    "selection_gap_weeks": 16,
+    "point_models": [
+      "residual",
+      "direct"
+    ],
+    "point_max_trees": 3000,
+    "point_early_stopping": 100,
+    "point_validation_weeks": 8,
+    "quantiles": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "quantile_trees": 700,
+    "calibration_weeks": 16,
+    "underage": 0.3,
+    "overage": 0.25,
+    "rolling_folds": 6,
+    "rolling_test_weeks": 26,
+    "fold_selection": "full_period fixed legacy sample vs train_period reselect before each fold calibration cutoff"
+  },
+  "output_policy": "new robustness directories; preserve current default results",
+  "interpretation": "All prespecified seeds and folds are reported. Different selected populations are not treated as paired identical-series model improvements."
+}

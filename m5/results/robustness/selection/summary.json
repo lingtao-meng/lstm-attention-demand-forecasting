@@ -1,0 +1,490 @@
+{
+  "full_period": {
+    "selection": {
+      "selection_start": "2011-01-29",
+      "selection_end": "2016-04-24",
+      "uses_future_sales_for_selection": true,
+      "overlap_with_full_period_sample": 100
+    },
+    "point": {
+      "mae": {
+        "naive": 25.94423076923077,
+        "ma4": 29.021346153846153,
+        "seasonal": 37.13115384615384,
+        "residual": 24.28339055698036,
+        "direct": 24.875743199059748
+      },
+      "fva_naive": 0.06401578165964072,
+      "fva_best_baseline": 0.06401578165964072,
+      "test_rows": 2600,
+      "raw_test_rows": 2600,
+      "best_iteration_residual": 95,
+      "best_iteration_direct": 123
+    },
+    "probability": {
+      "coverage_80": 0.808076923076923,
+      "width_80": 66.19946437927865,
+      "conformal_adjustment": 1.2424530398628928,
+      "quantile_crossings": 94,
+      "costs": {
+        "naive_conformal": 14.646787307692307,
+        "p50_conformal": 13.2804345065627,
+        "naive_normal": 14.278411858832232
+      },
+      "cost_reduction": 0.09328686028041211,
+      "proper_rows": 15671,
+      "calibration_rows": 1600,
+      "test_rows": 2600,
+      "calibration_start": "2015-07-04",
+      "test_start": "2015-10-24"
+    },
+    "folds": [
+      {
+        "fold": 1,
+        "test_start": "2015-10-24",
+        "test_end": "2016-04-16",
+        "train_rows": 17271,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2016-04-24",
+          "uses_future_sales_for_selection": true,
+          "overlap_with_full_period_sample": 100
+        },
+        "training_origin": "identical main residual training reused",
+        "dm_stat": -1.4142435727383653,
+        "dm_p": 0.15729039843495163,
+        "mae": {
+          "naive": 25.94423076923077,
+          "ma4": 29.021346153846153,
+          "seasonal": 37.13115384615384,
+          "residual": 24.28339055698036
+        },
+        "fva_naive": 0.06401578165964072,
+        "fva_best_baseline": 0.06401578165964072
+      },
+      {
+        "fold": 2,
+        "test_start": "2015-04-25",
+        "test_end": "2015-10-17",
+        "train_rows": 14676,
+        "test_rows": 2595,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 5,
+        "missing_feature_counts": {
+          "price": 4,
+          "price_rel": 5,
+          "price_change": 5
+        },
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2016-04-24",
+          "uses_future_sales_for_selection": true,
+          "overlap_with_full_period_sample": 100
+        },
+        "training_origin": "refitted",
+        "dm_stat": -2.4249047389876788,
+        "dm_p": 0.015312404144088854,
+        "mae": {
+          "naive": 26.065895953757224,
+          "ma4": 29.216281310211947,
+          "seasonal": 42.87206165703275,
+          "residual": 24.758104676366617
+        },
+        "fva_naive": 0.05017250432176679,
+        "fva_best_baseline": 0.05017250432176679
+      },
+      {
+        "fold": 3,
+        "test_start": "2014-10-25",
+        "test_end": "2015-04-18",
+        "train_rows": 12139,
+        "test_rows": 2537,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 63,
+        "missing_feature_counts": {
+          "price": 60,
+          "price_rel": 63,
+          "price_change": 63
+        },
+        "evaluated_series": 99,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2016-04-24",
+          "uses_future_sales_for_selection": true,
+          "overlap_with_full_period_sample": 100
+        },
+        "training_origin": "refitted",
+        "dm_stat": -1.1839432592922632,
+        "dm_p": 0.23643552439477955,
+        "mae": {
+          "naive": 30.43791880173433,
+          "ma4": 36.33228222309815,
+          "seasonal": 46.92392589672842,
+          "residual": 29.325591443271954
+        },
+        "fva_naive": 0.036544133181635186,
+        "fva_best_baseline": 0.036544133181635186
+      },
+      {
+        "fold": 4,
+        "test_start": "2014-04-26",
+        "test_end": "2014-10-18",
+        "train_rows": 9651,
+        "test_rows": 2488,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 112,
+        "missing_feature_counts": {
+          "price": 111,
+          "price_rel": 112,
+          "price_change": 112
+        },
+        "evaluated_series": 96,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2016-04-24",
+          "uses_future_sales_for_selection": true,
+          "overlap_with_full_period_sample": 100
+        },
+        "training_origin": "refitted",
+        "dm_stat": -4.5125395476808405,
+        "dm_p": 6.405598584002803e-06,
+        "mae": {
+          "naive": 28.882234726688104,
+          "ma4": 30.338826366559484,
+          "seasonal": 65.55948553054662,
+          "residual": 27.66562885740938
+        },
+        "fva_naive": 0.04212298254589497,
+        "fva_best_baseline": 0.04212298254589497
+      },
+      {
+        "fold": 5,
+        "test_start": "2013-10-26",
+        "test_end": "2014-04-19",
+        "train_rows": 7340,
+        "test_rows": 2311,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 289,
+        "missing_feature_counts": {
+          "price": 280,
+          "price_rel": 289,
+          "price_change": 289
+        },
+        "evaluated_series": 94,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2016-04-24",
+          "uses_future_sales_for_selection": true,
+          "overlap_with_full_period_sample": 100
+        },
+        "training_origin": "refitted",
+        "dm_stat": 3.834753253381376,
+        "dm_p": 0.00012569040848964264,
+        "mae": {
+          "naive": 39.54348766767633,
+          "ma4": 42.398528775421894,
+          "seasonal": 71.0653396797923,
+          "residual": 39.9001527122979
+        },
+        "fva_naive": -0.009019564678234504,
+        "fva_best_baseline": -0.009019564678234504
+      },
+      {
+        "fold": 6,
+        "test_start": "2013-04-27",
+        "test_end": "2013-10-19",
+        "train_rows": 5121,
+        "test_rows": 2219,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 381,
+        "missing_feature_counts": {
+          "price": 379,
+          "price_rel": 381,
+          "price_change": 381
+        },
+        "evaluated_series": 86,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2016-04-24",
+          "uses_future_sales_for_selection": true,
+          "overlap_with_full_period_sample": 100
+        },
+        "training_origin": "refitted",
+        "dm_stat": -4.6932210590149195,
+        "dm_p": 2.6893660769466976e-06,
+        "mae": {
+          "naive": 39.7611536728256,
+          "ma4": 44.1412798557909,
+          "seasonal": 73.42451554754393,
+          "residual": 36.920329042149916
+        },
+        "fva_naive": 0.07144723852963097,
+        "fva_best_baseline": 0.07144723852963097
+      }
+    ],
+    "rolling": {
+      "folds": 6,
+      "fva_mean": 0.04254717926005569,
+      "fva_std_ddof1": 0.028459112714708183,
+      "fva_min": -0.009019564678234504,
+      "fva_max": 0.07144723852963097,
+      "wins_vs_naive": 5
+    }
+  },
+  "train_period": {
+    "selection": {
+      "selection_start": "2011-01-29",
+      "selection_end": "2015-07-03",
+      "calibration_start": "2015-07-04",
+      "test_start": "2015-10-24",
+      "selection_days": 1617,
+      "selection_gap_weeks": 16,
+      "uses_future_sales_for_selection": false,
+      "overlap_with_full_period_sample": 49
+    },
+    "point": {
+      "mae": {
+        "naive": 24.83653846153846,
+        "ma4": 27.894326923076925,
+        "seasonal": 35.57269230769231,
+        "residual": 23.27292775492854,
+        "direct": 23.06727042254638
+      },
+      "fva_naive": 0.06295606406791787,
+      "fva_best_baseline": 0.06295606406791787,
+      "test_rows": 2600,
+      "raw_test_rows": 2600,
+      "best_iteration_residual": 95,
+      "best_iteration_direct": 171
+    },
+    "probability": {
+      "coverage_80": 0.8073076923076923,
+      "width_80": 62.381583406276626,
+      "conformal_adjustment": 0.9510753282314575,
+      "quantile_crossings": 148,
+      "costs": {
+        "naive_conformal": 11.90092923076923,
+        "p50_conformal": 10.526293457815338,
+        "naive_normal": 11.676065871895393
+      },
+      "cost_reduction": 0.11550659165335109,
+      "proper_rows": 16254,
+      "calibration_rows": 1600,
+      "test_rows": 2600,
+      "calibration_start": "2015-07-04",
+      "test_start": "2015-10-24"
+    },
+    "folds": [
+      {
+        "fold": 1,
+        "test_start": "2015-10-24",
+        "test_end": "2016-04-16",
+        "train_rows": 17854,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2015-07-03",
+          "calibration_start": "2015-07-04",
+          "test_start": "2015-10-24",
+          "selection_days": 1617,
+          "selection_gap_weeks": 16,
+          "uses_future_sales_for_selection": false,
+          "overlap_with_full_period_sample": 49
+        },
+        "training_origin": "identical main residual training reused",
+        "dm_stat": -1.1304760087517634,
+        "dm_p": 0.25827570208893436,
+        "mae": {
+          "naive": 24.83653846153846,
+          "ma4": 27.894326923076925,
+          "seasonal": 35.57269230769231,
+          "residual": 23.27292775492854
+        },
+        "fva_naive": 0.06295606406791787,
+        "fva_best_baseline": 0.06295606406791787
+      },
+      {
+        "fold": 2,
+        "test_start": "2015-04-25",
+        "test_end": "2015-10-17",
+        "train_rows": 15661,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2015-01-02",
+          "calibration_start": "2015-01-03",
+          "test_start": "2015-04-25",
+          "selection_days": 1435,
+          "selection_gap_weeks": 16
+        },
+        "training_origin": "refitted",
+        "dm_stat": -1.9196318594083752,
+        "dm_p": 0.054904416832423975,
+        "mae": {
+          "naive": 26.04423076923077,
+          "ma4": 29.704423076923078,
+          "seasonal": 42.020384615384614,
+          "residual": 24.94987828548625
+        },
+        "fva_naive": 0.04201899812058996,
+        "fva_best_baseline": 0.04201899812058996
+      },
+      {
+        "fold": 3,
+        "test_start": "2014-10-25",
+        "test_end": "2015-04-18",
+        "train_rows": 12696,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2014-07-04",
+          "calibration_start": "2014-07-05",
+          "test_start": "2014-10-25",
+          "selection_days": 1253,
+          "selection_gap_weeks": 16
+        },
+        "training_origin": "refitted",
+        "dm_stat": -0.4785149495890827,
+        "dm_p": 0.6322837365482272,
+        "mae": {
+          "naive": 29.436923076923076,
+          "ma4": 35.97461538461538,
+          "seasonal": 46.89576923076923,
+          "residual": 29.065035840943555
+        },
+        "fva_naive": 0.012633359641825437,
+        "fva_best_baseline": 0.012633359641825437
+      },
+      {
+        "fold": 4,
+        "test_start": "2014-04-26",
+        "test_end": "2014-10-18",
+        "train_rows": 10863,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2014-01-03",
+          "calibration_start": "2014-01-04",
+          "test_start": "2014-04-26",
+          "selection_days": 1071,
+          "selection_gap_weeks": 16
+        },
+        "training_origin": "refitted",
+        "dm_stat": -4.12873212673117,
+        "dm_p": 3.647690664032588e-05,
+        "mae": {
+          "naive": 29.213461538461537,
+          "ma4": 30.325,
+          "seasonal": 58.987692307692306,
+          "residual": 27.509171291001543
+        },
+        "fva_naive": 0.058339209313356344,
+        "fva_best_baseline": 0.058339209313356344
+      },
+      {
+        "fold": 5,
+        "test_start": "2013-10-26",
+        "test_end": "2014-04-19",
+        "train_rows": 8284,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2013-07-05",
+          "calibration_start": "2013-07-06",
+          "test_start": "2013-10-26",
+          "selection_days": 889,
+          "selection_gap_weeks": 16
+        },
+        "training_origin": "refitted",
+        "dm_stat": 2.2610602806916886,
+        "dm_p": 0.023755524511599235,
+        "mae": {
+          "naive": 33.82269230769231,
+          "ma4": 36.25028846153846,
+          "seasonal": 63.12346153846154,
+          "residual": 33.966220138924356
+        },
+        "fva_naive": -0.0042435365560595795,
+        "fva_best_baseline": -0.0042435365560595795
+      },
+      {
+        "fold": 6,
+        "test_start": "2013-04-27",
+        "test_end": "2013-10-19",
+        "train_rows": 6223,
+        "test_rows": 2600,
+        "raw_test_rows": 2600,
+        "dropped_test_rows": 0,
+        "missing_feature_counts": {},
+        "evaluated_series": 100,
+        "selected_series": 100,
+        "selection": {
+          "selection_start": "2011-01-29",
+          "selection_end": "2013-01-04",
+          "calibration_start": "2013-01-05",
+          "test_start": "2013-04-27",
+          "selection_days": 707,
+          "selection_gap_weeks": 16
+        },
+        "training_origin": "refitted",
+        "dm_stat": -2.9021798458217893,
+        "dm_p": 0.003705757268763543,
+        "mae": {
+          "naive": 34.57807692307692,
+          "ma4": 37.39923076923077,
+          "seasonal": 62.25730769230769,
+          "residual": 32.47481647008196
+        },
+        "fva_naive": 0.060826414889235014,
+        "fva_best_baseline": 0.060826414889235014
+      }
+    ],
+    "rolling": {
+      "folds": 6,
+      "fva_mean": 0.03875508491281084,
+      "fva_std_ddof1": 0.028278076442057102,
+      "fva_min": -0.0042435365560595795,
+      "fva_max": 0.06295606406791787,
+      "wins_vs_naive": 5
+    }
+  },
+  "elapsed_seconds": 76.75683474999096,
+  "comparison_note": "Selection policies can produce different populations. Changes in absolute MAE/cost are not paired improvements on identical item-store samples. Within-policy FVA/cost comparisons use identical test records and independent calibration."
+}
