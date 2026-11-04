@@ -23,6 +23,9 @@ jobs:
       - name: Forecast error -> safety stock -> holding cost
         run: python scripts/forecast_to_inventory.py
 
+      - name: Saved predictions, order costs and report consistency
+        run: python scripts/verify_results.py
+
       - name: Compile modules
         run: python -m compileall -q scripts m5/src m5/scripts
 
@@ -30,7 +33,7 @@ jobs:
         run: python scripts/forecast_diagnostics.py
 
       - name: Diagnostics tests
-        run: python tests/test_forecast_diagnostics.py
+        run: python -m unittest discover -s tests -v
 
       - name: M5 tests
         working-directory: m5

@@ -1,200 +1,79 @@
-# M5 周度需求预测：FVA 和 newsvendor
+# M5商品门店周销量：预测、校准与订货成本
 
-[![CI](https://github.com/lingtao-meng/lstm-attention-demand-forecasting/actions/workflows/ci.yml/badge.svg)](https://github.com/lingtao-meng/lstm-attention-demand-forecasting/actions/workflows/ci.yml)
+使用M5公开的日销量、日历和周价格，将预测精度、区间覆盖和订货成本放在同一数据口径下检验。模型比较使用相同测试样本，订货比较使用独立校准期。
 
-用 M5（Walmart 真实销售数据）做一个 item-store 级的周度需求预测。这个模块不是再比一次模型，主要想回答三个问题：
+## 结果摘要
 
-1. 简单基准到底有多强？
-2. LightGBM 相对最强基准的 FVA 是多少？
-3. 误差降下来，订货成本能降多少？
+<!-- results:start -->
+- 100条商品门店序列 × 26周，共 **2,600** 条测试记录；按周更新已观测历史，做一步预测。
+- LightGBM 残差 MAE **24.2834件**，相对 naive 改善 **6.40%**。
+- 六折改善均值 **4.25%**，折间样本标准差 **2.85 个百分点**，范围 **-0.90% 至 7.14%**。
+- 名义80%区间：样本外经验覆盖 **80.81%**，平均宽度 **66.20件**。
+- 给定缺货/积压成本，P50+校准的单周期成本 **$13.2804**，较同样校准的 naive **$14.6468** 低 **9.33%**。
+<!-- results:end -->
 
-数据、代码、图表和结果都在这个模块里，可以直接复现。
+逐行复算与输入指纹见 [结果核对表](../docs/RESULTS.md)；流程解释见 [入门案例](../docs/WALKTHROUGH.md)。
 
-## 数据
+## 数据处理
 
-M5 来自 Kaggle 的 Walmart 销售竞赛，包含 10 家店、3,049 个商品、1,941 天的日销量，还有日历事件和每周价格。
+原始数据包含10店、3,049商品、1,941天。每店取全时期销量最高的5条商品门店序列，再从其余非零序列随机抽50条，共100条。这个样本选择使用了全时期销量，因此结果限定于所选分析样本；不将其当作全部30,490条序列的无偏代表。
 
-这个模块取了 **100 个 item-store series**：每家店销量最高的 5 个，再随机抽 50 个。这样既不会全是畅销品，也不至于被长尾噪声淹没。
+1. 按日历自带 `wm_yr_wk` 聚合完整7天零售周；M5周界为**周六至周五**。
+2. 价格按 `store_id + item_id + wm_yr_wk` 连接，只向前填充已知价格，避免用未来价格回填历史。
+3. 保留273个完整周，形成27,300行面板。最后26周测试，点模型在前部另留8周验证，概率模型另留16周校准。
+4. 日历 `week_start` 是实际周六日期；部分历史JSON仍含自然周Period展示标签，应以明细CSV的 `week_start` 为准。
 
-注意：这个选择用了全时期销量，属于样本选择，不是模型特征；换成只用训练期选 series，结果会变，但方法不受影响。
+## 模型与评估
 
-- 日销量聚成周销量（周一到周日）
-- 最后 **26 周**做 holdout，前面按时间切分，不随机打乱
-- 价格来自 `sell_prices.csv`，按周平均后并到 series 上
-- 训练时只用 holdout 之前的数据
+- 基准：上周值naive、过去四周均值MA4、52周滞后seasonal naive。
+- 输入：销量滞后1/2/3/4/8/13/26/52周、滚动均值与波动、零销量占比、EWM、日历事件、SNAP、类别和价格特征。滚动统计先 `shift(1)`，只使用历史销量。
+- LightGBM学习 `本周销量 − naive`，最终加回naive并截为非负；direct实验在相同样本上直接预测销量，单独保存。
+- 报告MAE、RMSE、Bias、跟踪信号及相对指定基准的FVA。当前残差模型有33/100条序列的跟踪信号绝对值大于4，整体平均误差不能替代分序列诊断。
+- 六折分别重训，以不重叠26周测试块比较；DM检验先按周聚合损失差，再用HAC处理部分时间相关。
 
-数据文件约 320MB，没有进 git。第一次运行先下载：
+## 概率预测与订货是两步
 
-```bash
-python scripts/download_data.py
-```
+P10、P50、P90三个LightGBM模型在proper训练区拟合。测试前留出16周校准：
 
-脚本用并行 range 请求从 Hugging Face 的公开镜像拉，单连接会被限速。
+| 用途 | 校准对象 | 如何使用 |
+|---|---|---|
+| 80%预测区间 | 100序列×16周的区间偏离分数 | 排序取有限样本调整量，调整P10/P90上下界 |
+| 单周期订货 | 每条序列的16个P50残差 | 按缺货/积压成本对应分位取余量，P50加余量后截为非负 |
 
-## 方法
+缺货代价为价格的0.30倍，积压代价为价格的0.25倍，临界比为 `0.30 / (0.30 + 0.25)`。比较P50+校准、naive+相同校准、naive+正态近似；所有策略统一按非负Q计算。
 
-**基准**
+区间覆盖是该时间面板上的样本外经验结果，不宣称任意未来的无条件保证。三分位模型可能交叉，核对表同时报告交叉数量。区间变宽和订货量增加不是同一件事。
 
-| 模型 | 做法 |
-|---|---|
-| naive | 上周销量 |
-| seasonal naive | 去年同周 |
-| MA4 | 过去 4 周均值 |
+`quantile_predictions.csv` 保存 `order_base`、`order_model`、`order_normal`，可逐行复算 `价格 × [0.30 × max(销量−Q,0) + 0.25 × max(Q−销量,0)]`。这是单周期离线费用比较，没有跨期库存结转。
 
-**LightGBM**
+## 分层预测
 
-特征包括 lag 1/2/3/4/8/13/26/52 周，4/8/13/26/52 周滚动均值和标准差，13 周零销量占比，8 周 EWM，周内位置的正余弦，月份/年份，事件和 SNAP 标记，价格、相对价格和价格变化。
+100个底层商品门店节点向上汇总为10店、3州和1个总量，共114节点。比较独立预测、bottom-up、top-down和OLS协调。当前bottom-up总层MAE约800.73件，优于OLS的1,013.34件。
 
-模型不是直接预测销量，而是**预测相对 naive 的残差**：最终预测 = naive + 残差。原因是树模型在时间外推上比较弱，直接预测在 holdout 上会系统性低预测；锚在 naive 上更稳。这个对比在下面有数。
+相干性指各层能够加总一致，不保证预测精度同步提升；无约束OLS也不保证所有节点非负。`coherence_gap` 为平均加总缺口，不能写成每周最大缺口。详见 `results/hierarchical.json`。
 
-**评估**
+## 复现
 
-- MAE、RMSE、偏差、每家店的 tracking signal（Σerror / MAD，|TS| > 4 视为有偏）
-- FVA = 1 − 模型 MAE / 基准 MAE
-- 所有模型都在同一个 26 周 holdout 上算
-
-**Newsvendor**
-
-临界比 CR = Cu / (Cu + Co) = 0.30 / (0.30 + 0.25) = 0.545。每家店用自己 holdout 误差的经验分位数订货，成本和正态近似对比。
-
-## 结果
-
-### 单窗口：26 周 holdout
-
-| 模型 | MAE | RMSE | 偏差 | \|TS\|>4 | FVA vs naive |
-|---|---|---|---|---|---|
-| **LightGBM（残差）** | **24.28** | **50.20** | −0.33 | 33/100 | **+6.4%** |
-| naive | 25.94 | 59.90 | +0.22 | 0/100 | 0 |
-| MA4 | 29.02 | 68.63 | +0.01 | 19/100 | −11.9% |
-| seasonal naive | 37.13 | 79.42 | +5.74 | 81/100 | −43.1% |
-
-![预测示例](images/forecast_examples.png)
-
-两个和直觉不太一样的地方：
-
-- **naive 很强。** 在这 100 个 series 上，MA4 和 seasonal naive 都没打赢它；seasonal naive 在最后 26 周甚至差了 47%。这不是 seasonal 方法本身不行，是这段窗口的水平和前一年对不上，硬套 52 周滞后会吃亏。
-- 直接预测的旧表是 MAE 23.36、FVA +7.9%，但和本轮残差表不是同一次运行；这里不拿它做消融比较。本轮只报残差模型：MAE 24.28、FVA +6.4%。
-
-![模型对比](images/model_comparison.png)
-
-模型还是有偏：45/100 家店的 |TS| > 4，中位 TS −2.57。
-
-### 滚动回测：+11.1% 是最好的一折
-
-![滚动回测](images/rolling_backtest.png)
-
-把同样的 100 个 series 走 6 个不重叠的 26 周测试块，每次重新训练：
-
-- FVA 平均 **+4.3% ± 2.9%**，范围 **−0.9% 到 +7.1%**
-- 6 折里 3 折显著优于 naive，1 折显著更差，2 折不显著（Diebold–Mariano，α=0.05）
-- 单窗口的 +6.4% 是乐观值。更可信的说法是“平均 4% 左右，好的窗口能到 7%，差的时候会输”
-
-FVA 本来就不是模型属性，跟窗口、品类、促销节奏都有关系。一个数字不如一个分布诚实。
-
-### 概率预测：P10/P50/P90 + conformal
-
-![概率预测](images/probabilistic_forecast.png)
-
-- P10/P50/P90 都预测 naive 残差；P10/P90 在训练期最后 16 周做 split conformal
-- 80% 区间实际覆盖 **80.8%**，平均宽度 66.2 件
-- pinball loss：P10 **4.97** / P50 **11.33** / P90 **5.71**
-
-![校准](images/probabilistic_calibration.png)
-
-覆盖率 80.8%，略高于 80% 名义值，区间略宽；对库存来说更保守，但会多备一点。
-
-### Newsvendor：点预测 vs 概率预测
-
-点预测版（用测试集误差分位，偏乐观）：
-
-| 策略 | 成本（$/series-week） |
-|---|---|
-| naive | $14.01 |
-| LightGBM | **$13.05（−6.8%）** |
-
-概率版（用 16 周校准误差，严格样本外）：
-
-| 策略 | 成本（$/series-week） |
-|---|---|
-| naive + conformal | $14.65 |
-| P50 + conformal | **$13.28（−9.3%）** |
-| naive + normal | $14.28 |
-
-![概率版 newsvendor](images/probabilistic_newsvendor.png)
-
-两个口径的绝对成本不能直接比：点预测版用了测试集误差分位，概率版用校准期误差分位，后者更接近上线时能看到的信息。但方向一致：**模型误差降下来，订货成本也降**；概率版里 P50+conformal 比正态近似低 5.7%。
-
-### 分层 reconciliation：bottom-up 反而最好
-
-![分层](images/hierarchical.png)
-
-100 个 item-store 汇总到 10 家店、3 个州、1 个 total，一共 114 个节点。每层各自训练残差 LightGBM，再比较四种组合：
-
-| 方法 | item-store | store | state | total | 相干性缺口 |
-|---|---|---|---|---|---|
-| base | 24.38 | 149.52 | 390.03 | 1,089.25 | 1,075.0 |
-| **bottom-up** | **24.38** | **147.80** | **366.24** | **800.73** | **0** |
-| top-down | 41.66 | 198.22 | 446.16 | 1,089.25 | 0 |
-| MinT-OLS | 25.96 | 157.30 | 400.65 | 1,013.34 | 0 |
-
-- 独立预测的各层对不上：base 的 total 和 bottom 之和每周最多差 **1,075.0 件**
-- bottom-up 相干，store/state/total 的 MAE 都更低（147.80/366.24/800.73）——底层模型在聚合层更有优势
-- top-down 把底层 MAE 从 24.38 推到 41.66：固定历史份额不响应周内结构变化
-- MinT-OLS 强制相干，但底层从 24.38 退到 25.96，总量也没赢 bottom-up
-
-所以 reconciliation 不是“越复杂越好”。底层预测强的时候，bottom-up 是很难打的基准；MinT 的价值取决于各层 base forecast 的误差协方差，这里 OLS 没赢。
-
-## 几个判断
-
-- FVA 的分母要用**同窗口的最强基准**，不是随手拿 naive。这个模块里 naive 恰好最强，但换个窗口，seasonal 可能翻上来。
-- 单窗口 +6.4%，六折平均 +4.3%。报 FVA 最好同时给区间，不然很容易被一个窗口骗了。
-- 预测误差降 10%，newsvendor 成本大致也降 10%，因为误差是线性传导的。真正决定省多少钱的，还是缺货/持有成本参数。
-- 100 个 series 不是全量 M5。换成全部 30,490 个 series，长尾和零销量会更多，FVA 大概率会变。
-- 分层这题里 bottom-up 赢了 MinT-OLS。不是 reconciliation 没用，是这份数据的底层预测已经很强，强制相干反而把好的底层拉坏。
-- 价格只用了每周均价，没有促销标记；M5 的促销信息还没有单独建模，后面可以继续做。
-
-## 运行
+以下命令在 `m5/` 下执行：
 
 ```bash
 pip install -r requirements.txt
 python scripts/download_data.py
 python scripts/run_analysis.py
-
-#  ablation：直接预测销量 vs 预测 naive 残差
 python scripts/run_analysis.py --direct
-
-# 概率预测 + conformal
-python scripts/run_probabilistic.py
-
-# 滚动回测 + DM 检验
+python scripts/run_probabilistic.py --seed 42
 python scripts/rolling_backtest.py
-
-# 分层 reconciliation
 python scripts/hierarchical.py
+
+# 在独立目录重跑概率实验，保护已有产物
+python scripts/run_probabilistic.py --seed 42 --outdir results_new --images images_new
+
+# 切回仓库根目录，核对已保存预测、订货明细和摘要
+cd ..
+python scripts/verify_results.py --write
+python scripts/verify_results.py
 ```
 
-结果写到 `results/`，图写到 `images/`，包括 `model_metrics.csv`、`model_metrics_direct.csv`、`predictions_test.csv`、`newsvendor_summary.csv`、`diagnostics.json`。
+direct产物位于 `m5/results/direct/` 与 `m5/images/direct/`。点预测脚本另有使用测试误差分位数的诊断成本；正式样本外订货引用16周独立校准的概率结果，二者分开。
 
-## 文件
-
-```
-src/m5.py                 数据加载、选 series、周度聚合、特征、基准、切分
-src/evaluation.py         MAE/RMSE/bias/tracking signal/FVA、newsvendor
-src/probabilistic.py      pinball、区间覆盖、conformal、DM 检验
-src/hierarchy.py          汇总矩阵、bottom-up / top-down / MinT-OLS
-scripts/download_data.py  并行下载 M5
-scripts/run_analysis.py   点预测端到端流程
-scripts/run_probabilistic.py  分位数预测 + conformal + 订货
-scripts/rolling_backtest.py   六折滚动回测 + DM
-scripts/hierarchical.py       分层预测与 reconciliation
-tests/                    合成数据单测
-results/                  指标、预测、newsvendor、校准和滚动回测结果
-images/                   预测示例、概率区间、校准、成本前沿、滚动回测、分层
-```
-
-## 数据来源
-
-M5 Forecasting – Accuracy（Kaggle）。这里通过 Hugging Face 的公开镜像下载，文件是 `calendar.csv`、`sales_train_validation.csv`、`sell_prices.csv`。数据版权归原竞赛/沃尔玛所有，本模块只用于学习和复现。
-
-
-直接预测（direct）现在单独写到 `results/direct/` 和 `images/direct/`，不会覆盖残差模型的预测、图和成本文件。
+数据为Kaggle M5 Forecasting公开数据，通过脚本获取公开镜像。数据权利归原竞赛及Walmart；代码使用 [MIT License](LICENSE)。

@@ -2,8 +2,8 @@
 """Quantile LightGBM + conformal calibration + newsvendor.
 
 Three quantile models (P10/P50/P90) are trained on the naive residual.  The
-P10/P90 interval is widened by a split-conformal adjustment on the last 8
-weeks of the training period; the P50 residual quantile at the newsvendor
+P10/P90 interval is adjusted using a separate 16-week calibration period. The
+P50 residual quantile at the newsvendor
 critical ratio is used to place the order directly.
 
 The point-forecast pipeline lives in ``run_analysis.py``; this script is the
@@ -25,7 +25,6 @@ from scipy import stats
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.evaluation import newsvendor  # noqa: E402
 from src.m5 import (  # noqa: E402
     CAT_COLS,
     add_baselines,
@@ -75,7 +74,7 @@ def _style() -> None:
     )
 
 
-def fit_quantile(train: pd.DataFrame, features: list[str], alpha: float) -> lgb.LGBMRegressor:
+def fit_quantile(train: pd.DataFrame, features: list[str], alpha: float, seed: int = 42) -> lgb.LGBMRegressor:
     target = train["sales"] - train["naive"]
     model = lgb.LGBMRegressor(
         objective="quantile",
@@ -86,7 +85,7 @@ def fit_quantile(train: pd.DataFrame, features: list[str], alpha: float) -> lgb.
         min_child_samples=20,
         subsample=0.8,
         colsample_bytree=0.8,
-        random_state=42,
+        random_state=seed,
         n_jobs=-1,
         verbose=-1,
     )
@@ -201,10 +200,13 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--underage", type=float, default=0.30)
     ap.add_argument("--overage", type=float, default=0.25)
+    ap.add_argument("--outdir", type=Path, default=RESULTS)
+    ap.add_argument("--images", type=Path, default=IMAGES)
     args = ap.parse_args()
 
-    RESULTS.mkdir(exist_ok=True)
-    IMAGES.mkdir(exist_ok=True)
+    results, images = args.outdir, args.images
+    results.mkdir(parents=True, exist_ok=True)
+    images.mkdir(parents=True, exist_ok=True)
 
     sales = load_sales(Path(args.data_dir) / "sales_train_validation.csv")
     calendar = pd.read_csv(Path(args.data_dir) / "calendar.csv", parse_dates=["date"])
@@ -224,7 +226,7 @@ def main() -> int:
     calibration = train[train["week"] >= cal_start]
 
     alphas = [0.1, 0.5, 0.9]
-    models = {alpha: fit_quantile(proper, features, alpha) for alpha in alphas}
+    models = {alpha: fit_quantile(proper, features, alpha, args.seed) for alpha in alphas}
     quantiles = {}
     for alpha, model in models.items():
         quantiles[alpha] = {
@@ -259,7 +261,6 @@ def main() -> int:
     preds["lower80"] = lower
     preds["upper80"] = upper
     preds["week"] = preds["week_start"].dt.strftime("%Y-%m-%d")
-    preds.to_csv(RESULTS / "quantile_predictions.csv", index=False)
 
     cr = args.underage / (args.underage + args.overage)
     cal_frame = calibration[["id", "sales", "naive"]].copy()
@@ -296,11 +297,20 @@ def main() -> int:
             {"policy": "naive + normal", "cost": cost(preds["order_normal"].to_numpy())},
         ]
     )
-    summary.to_csv(RESULTS / "probabilistic_newsvendor.csv", index=False)
-    metrics.to_csv(RESULTS / "probabilistic_metrics.csv", index=False)
+    # Keep the evaluated nonnegative quantities so costs can be recomputed
+    # from the exported rows without fitting models again.
+    preds.to_csv(results / "quantile_predictions.csv", index=False)
+    summary.to_csv(results / "probabilistic_newsvendor.csv", index=False)
+    metrics.to_csv(results / "probabilistic_metrics.csv", index=False)
 
     payload = {
-        "holdout_start": str(holdout_start),
+        "holdout_start": str(test["week_start"].min().date()),
+        "seed": args.seed,
+        "calibration_weeks": 16,
+        "calibration_records": len(calibration),
+        "test_records": len(test),
+        "underage_price_ratio": args.underage,
+        "overage_price_ratio": args.overage,
         "critical_ratio": cr,
         "conformal_adjustment": adjustment,
         "coverage_80": coverage,
@@ -308,7 +318,7 @@ def main() -> int:
         "metrics": metrics.to_dict(orient="records"),
         "newsvendor": summary.to_dict(orient="records"),
     }
-    (RESULTS / "probabilistic.json").write_text(
+    (results / "probabilistic.json").write_text(
         json.dumps(payload, indent=2, ensure_ascii=False, default=float), encoding="utf-8"
     )
 
@@ -316,10 +326,10 @@ def main() -> int:
     print(f"80% coverage {coverage:.1%}, width {width:.1f}")
     print(summary.to_string(index=False))
 
-    plot_forecast(preds, IMAGES)
-    plot_calibration(metrics, coverage, 0.80, IMAGES)
-    plot_newsvendor(summary, IMAGES)
-    print(f"wrote probabilistic charts to {IMAGES}")
+    plot_forecast(preds, images)
+    plot_calibration(metrics, coverage, 0.80, images)
+    plot_newsvendor(summary, images)
+    print(f"wrote probabilistic charts to {images}")
     return 0
 
 
