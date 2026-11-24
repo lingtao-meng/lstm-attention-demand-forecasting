@@ -29,6 +29,12 @@ jobs:
       - name: Robustness predictions and calibration consistency
         run: python scripts/verify_robustness.py
 
+      - name: M5 rolling probabilistic forecasts and order costs
+        run: python m5/scripts/probabilistic_backtest.py --verify
+
+      - name: M5 multi-period inventory replay
+        run: python m5/scripts/inventory_replay.py --verify
+
       - name: Compile modules
         run: python -m compileall -q scripts m5/src m5/scripts
 

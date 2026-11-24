@@ -1,0 +1,47 @@
+{
+  "evidence_sha256": {
+    "calibration": "fd2471e800b5c63e8254c6a74cddf6c605c0ef4cb93a389fe4768e312dfe9084",
+    "predictions": "0566c98a8651cc0b3ef6a7671f51b39a131901b72cabc98e3a60a8e25efcb58d"
+  },
+  "leads": [
+    1,
+    2
+  ],
+  "residual_taus": [
+    0.35,
+    0.5,
+    0.65,
+    0.8,
+    0.9,
+    0.95
+  ],
+  "fixed_comparison_tau": 0.65,
+  "service_thresholds": [
+    0.9,
+    0.95,
+    0.97
+  ],
+  "warmup_weeks": 4,
+  "pretest_buffer_fit_weeks": 8,
+  "pretest_policy_selection_weeks": 8,
+  "cost_profiles_holding_shortage_price_ratios": {
+    "balanced": [
+      0.02,
+      0.3
+    ],
+    "holding_weighted": [
+      0.04,
+      0.15
+    ],
+    "shortage_weighted": [
+      0.01,
+      0.45
+    ]
+  },
+  "test_weeks": 26,
+  "scored_weeks_per_fold": 22,
+  "series_per_fold": 100,
+  "calibration_weeks": 16,
+  "forecast_step": 1,
+  "demand": "Recorded M5 sales used as a demand proxy in a lost-sales scenario."
+}
