@@ -12,6 +12,12 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # ── Page config ──
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from figure_style import format_plotly  # noqa: E402
+
 st.set_page_config(
     page_title="零售需求预测 | LSTM + Attention",
     page_icon="📊",
@@ -159,7 +165,7 @@ with col1:
     fig.add_trace(go.Scatter(
         x=hist_weeks, y=hist_sales,
         mode='lines+markers', name='Historical Sales',
-        line=dict(color='#2196F3', width=2),
+        line=dict(color='#355c78', width=2),
         marker=dict(size=5),
         hovertemplate='Week %{x}<br>Sales: $%{y:.2f}M<extra></extra>'
     ))
@@ -168,8 +174,8 @@ with col1:
     fig.add_trace(go.Scatter(
         x=forecast_weeks + forecast_weeks[::-1],
         y=list(forecast_p90) + list(forecast_p10)[::-1],
-        fill='toself', fillcolor='rgba(255,0,0,0.15)',
-        line=dict(color='rgba(255,0,0,0)'),
+        fill='toself', fillcolor='rgba(147,101,68,0.16)',
+        line=dict(color='rgba(147,101,68,0)'),
         name='P10-P90 Interval',
         hoverinfo='skip'
     ))
@@ -178,7 +184,7 @@ with col1:
     fig.add_trace(go.Scatter(
         x=forecast_weeks, y=forecast_p50,
         mode='lines+markers', name='P50 Forecast',
-        line=dict(color='#F44336', width=2.5),
+        line=dict(color='#965f41', width=2.5),
         marker=dict(size=9, symbol='diamond'),
         hovertemplate='Week +%{x}<br>P50: $%{y:.2f}M<br>P10: $%{customdata[0]:.2f}M<br>P90: $%{customdata[1]:.2f}M<extra></extra>',
         customdata=list(zip(forecast_p10, forecast_p90))
@@ -198,7 +204,7 @@ with col1:
         margin=dict(l=20, r=20, t=40, b=20)
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(format_plotly(fig), use_container_width=True, theme=None)
 
 with col2:
     st.subheader("📋 预测详情")
@@ -232,7 +238,7 @@ if show_attn:
     avg_attn = attn_matrix.mean(axis=0)
 
     weeks_labels = [f'{LOOKBACK-i}w ago' for i in range(LOOKBACK)]
-    colors = ['#2196F3' if v > avg_attn.mean() else '#90CAF9' for v in avg_attn]
+    colors = ['#355c78' if v > avg_attn.mean() else '#aebcc5' for v in avg_attn]
 
     fig2 = go.Figure()
     fig2.add_trace(go.Bar(
@@ -247,7 +253,7 @@ if show_attn:
         height=350,
         margin=dict(l=20, r=20, t=40, b=20)
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(format_plotly(fig2), use_container_width=True, theme=None)
 
     top_weeks = np.argsort(avg_attn)[::-1][:3]
     st.caption(f"📌 Top 3 most attended weeks: {', '.join([f'{LOOKBACK-w}w ago' for w in top_weeks])}")

@@ -18,6 +18,11 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from figure_style import format_figure  # noqa: E402
+
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -150,7 +155,7 @@ def main() -> int:
                          "axes.titleweight": "bold", "legend.frameon": False})
     fig, axes = plt.subplots(1, 2, figsize=(12.0, 4.0))
     ax = axes[0]
-    ax.bar(table["fold"], table["fva_naive"] * 100, color="#1f6f78", width=0.55)
+    ax.bar(table["fold"], table["fva_naive"] * 100, color="#315b78", width=0.55)
     ax.axhline(0, color="#6b6b6b", linewidth=0.8)
     ax.axhline(summary["fva_mean"] * 100, color="#b23a48", linestyle="--", linewidth=1,
                label=f"mean {summary['fva_mean']:+.1%}")
@@ -161,8 +166,8 @@ def main() -> int:
     ax.legend(fontsize=8)
 
     ax2 = axes[1]
-    for model, color, label in [("naive", "#c9a227", "naive"), ("ma4", "#9aa6ad", "MA4"),
-                                ("seasonal", "#b8c4c9", "seasonal"), ("lgbm", "#1f6f78", "LightGBM")]:
+    for model, color, label in [("naive", "#92754b", "naive"), ("ma4", "#9aa6ad", "MA4"),
+                                ("seasonal", "#b8c4c9", "seasonal"), ("lgbm", "#315b78", "LightGBM")]:
         ax2.plot(table["fold"], table[f"mae_{model}"], marker="o", linewidth=1.8, color=color, label=label)
     ax2.set_xticks(table["fold"])
     ax2.set_xlabel("fold (1 = latest test block)")
@@ -175,7 +180,8 @@ def main() -> int:
         for side in ("top", "right"):
             axis.spines[side].set_visible(False)
     fig.tight_layout()
-    fig.savefig(IMAGES / "rolling_backtest.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(IMAGES / "rolling_backtest.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {IMAGES / 'rolling_backtest.png'}")
     return 0

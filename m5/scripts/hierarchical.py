@@ -24,6 +24,11 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from figure_style import format_figure  # noqa: E402
+
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -214,7 +219,7 @@ def main() -> int:
     fig, axes = plt.subplots(1, 2, figsize=(13.0, 4.3), gridspec_kw={"width_ratios": [1.15, 1]})
     ax = axes[0]
     levels = ["bottom", "store", "state", "total"]
-    colors = {"base": "#9aa6ad", "bottom-up": "#c9a227", "top-down": "#b8c4c9", "MinT-OLS": "#1f6f78"}
+    colors = {"base": "#9aa6ad", "bottom-up": "#92754b", "top-down": "#b8c4c9", "MinT-OLS": "#315b78"}
     width = 0.2
     x = np.arange(len(levels))
     for i, method in enumerate(methods):
@@ -235,8 +240,8 @@ def main() -> int:
     x_weeks = np.arange(len(weeks))
     ax2.plot(x_weeks, actual[0], color="#2b2b2b", linewidth=2.0, label="actual")
     ax2.plot(x_weeks, base[0], color="#9aa6ad", linewidth=1.3, linestyle="--", label="base total")
-    ax2.plot(x_weeks, methods["bottom-up"][0], color="#c9a227", linewidth=1.8, label="bottom-up")
-    ax2.plot(x_weeks, methods["MinT-OLS"][0], color="#1f6f78", linewidth=1.8, label="MinT-OLS")
+    ax2.plot(x_weeks, methods["bottom-up"][0], color="#92754b", linewidth=1.8, label="bottom-up")
+    ax2.plot(x_weeks, methods["MinT-OLS"][0], color="#315b78", linewidth=1.8, label="MinT-OLS")
     ax2.set_xticks(x_weeks[::4])
     ax2.set_xticklabels([str(week)[:10] for week in weeks][::4], rotation=45, ha="right", fontsize=7)
     ax2.set_ylabel("weekly units")
@@ -247,7 +252,8 @@ def main() -> int:
         ax2.spines[side].set_visible(False)
 
     fig.tight_layout()
-    fig.savefig(IMAGES / "hierarchical.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(IMAGES / "hierarchical.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
     print(f"wrote {IMAGES / 'hierarchical.png'}")
     return 0

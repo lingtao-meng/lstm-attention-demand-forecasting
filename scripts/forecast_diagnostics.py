@@ -33,6 +33,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from figure_style import format_figure  # noqa: E402
+
+
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "results"
 IMAGES = ROOT / "images"
@@ -169,7 +174,7 @@ def plot(models: pd.DataFrame, errors: pd.DataFrame, nv_detail: pd.DataFrame, fr
 
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.2))
     ax = axes[0]
-    colors = {"naive": "#9b3b3b", "seasonal": "#d99a2b", "ma4": "#1f6f78"}
+    colors = {"naive": "#7c4642", "seasonal": "#a1774b", "ma4": "#315b78"}
     ax.bar(models["model"], models["mae"], color=[colors.get(m, "#7c8a99") for m in models["model"]])
     for i, row in enumerate(models.itertuples()):
         ax.text(i, row.mae * 1.02, f"FVA {row.fva_vs_naive:+.1%}", ha="center", fontsize=8)
@@ -183,41 +188,43 @@ def plot(models: pd.DataFrame, errors: pd.DataFrame, nv_detail: pd.DataFrame, fr
         ts = group.groupby("store")["error"].apply(tracking_signal).to_numpy()
         x = jitter[model] + np.random.default_rng(1).uniform(-0.15, 0.15, len(ts))
         ax2.scatter(x, ts, s=16, alpha=0.7, color=colors.get(model, "#7c8a99"), label=model)
-    ax2.axhline(4, color="#9b3b3b", linestyle="--", linewidth=1)
-    ax2.axhline(-4, color="#9b3b3b", linestyle="--", linewidth=1)
+    ax2.axhline(4, color="#7c4642", linestyle="--", linewidth=1)
+    ax2.axhline(-4, color="#7c4642", linestyle="--", linewidth=1)
     ax2.set_xticks([0, 1, 2], ["naive", "seasonal", "ma4"])
     ax2.set_ylabel("tracking signal (Σ error / MAD)")
     ax2.set_title("Bias: |TS| > 4 per store")
     ax2.legend(fontsize=8)
 
     fig.tight_layout()
-    fig.savefig(images / "fva_tracking.png", dpi=150)
+    format_figure(fig)
+    fig.savefig(images / "fva_tracking.png", dpi=260)
     plt.close(fig)
 
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.2))
     ax = axes[0]
     model_errors = errors[errors["model"] == "ma4"]["error"].to_numpy()
-    ax.hist(model_errors, bins=60, color="#2f5d8c", alpha=0.75)
+    ax.hist(model_errors, bins=60, color="#627d92", alpha=0.75)
     cr = float(nv_detail["critical_ratio"].iloc[0])
     q_emp = float(np.quantile(model_errors, cr))
     q_norm = float(model_errors.mean() + stats.norm.ppf(cr) * model_errors.std(ddof=1))
-    ax.axvline(q_emp, color="#1f6f78", linewidth=2, label=f"empirical q (CR={cr:.2f})")
-    ax.axvline(q_norm, color="#d99a2b", linewidth=2, linestyle="--", label="normal q")
+    ax.axvline(q_emp, color="#315b78", linewidth=2, label=f"empirical q (CR={cr:.2f})")
+    ax.axvline(q_norm, color="#a1774b", linewidth=2, linestyle="--", label="normal q")
     ax.set_xlabel("forecast error (actual − forecast, USD)")
     ax.set_ylabel("store-weeks")
     ax.set_title("MA4 errors: the empirical quantile is not normal")
     ax.legend(fontsize=8)
 
     ax2 = axes[1]
-    ax2.plot(frontier["service_level"] * 100, frontier["expected_cost"], marker="o", color="#1f6f78")
-    ax2.axvline(cr * 100, color="#9b3b3b", linestyle="--", linewidth=1, label="critical ratio")
+    ax2.plot(frontier["service_level"] * 100, frontier["expected_cost"], marker="o", color="#315b78")
+    ax2.axvline(cr * 100, color="#7c4642", linestyle="--", linewidth=1, label="critical ratio")
     ax2.set_xlabel("cycle service level (%)")
     ax2.set_ylabel("expected newsvendor cost (USD / store-week)")
     ax2.set_title("Cost-service frontier for the MA4 benchmark")
     ax2.legend(fontsize=8)
 
     fig.tight_layout()
-    fig.savefig(images / "newsvendor.png", dpi=150)
+    format_figure(fig)
+    fig.savefig(images / "newsvendor.png", dpi=260)
     plt.close(fig)
 
 

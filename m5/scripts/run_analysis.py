@@ -24,6 +24,11 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from figure_style import format_figure  # noqa: E402
+
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -85,8 +90,8 @@ def train_model(train: pd.DataFrame, features: list[str], direct: bool = False) 
 
 
 INK = "#2b2b2b"
-TEAL = "#1f6f78"
-AMBER = "#c9a227"
+TEAL = "#315b78"
+AMBER = "#92754b"
 RED = "#b23a48"
 MUTED = "#9aa6ad"
 GRID = "#e8e8e8"
@@ -129,7 +134,7 @@ def plot_examples(preds: pd.DataFrame, weekly: pd.DataFrame, holdout_start, imag
         n, h = len(history), len(forecast)
         x = np.arange(n)
         dates = history["week_start"] if "week_start" in history.columns else history["week"].dt.start_time
-        ax.axvspan(n - h - 0.5, n - 0.5, color="#f6efe3", zorder=0)
+        ax.axvspan(n - h - 0.5, n - 0.5, color="#f1f2f2", zorder=0)
         ax.plot(x, history["sales"], color=INK, linewidth=1.8, label="actual")
         ax.plot(x[-h:], forecast["naive"], color=AMBER, linewidth=1.4, linestyle="--", label="naive")
         ax.plot(x[-h:], forecast["lgbm"], color=TEAL, linewidth=2.2, label="LightGBM")
@@ -150,7 +155,8 @@ def plot_examples(preds: pd.DataFrame, weekly: pd.DataFrame, holdout_start, imag
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.02), fontsize=8)
     fig.tight_layout(rect=(0, 0, 1, 0.92))
-    fig.savefig(images / "forecast_examples.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(images / "forecast_examples.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -204,7 +210,8 @@ def plot_models(models: pd.DataFrame, images: Path) -> None:
         ax2.spines[side].set_visible(False)
 
     fig.tight_layout()
-    fig.savefig(images / "model_comparison.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(images / "model_comparison.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -247,7 +254,8 @@ def plot_newsvendor(frontier: pd.DataFrame, summary: dict, images: Path) -> None
         ax.spines[side].set_visible(False)
     ax.legend(loc="upper left", fontsize=8)
     fig.tight_layout()
-    fig.savefig(images / "newsvendor.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(images / "newsvendor.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
 
 

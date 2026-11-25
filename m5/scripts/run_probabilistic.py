@@ -22,6 +22,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from figure_style import format_figure  # noqa: E402
+
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -46,8 +51,8 @@ from src.probabilistic import (  # noqa: E402
 RESULTS = ROOT / "results"
 IMAGES = ROOT / "images"
 INK = "#2b2b2b"
-TEAL = "#1f6f78"
-AMBER = "#c9a227"
+TEAL = "#315b78"
+AMBER = "#92754b"
 RED = "#b23a48"
 GRID = "#e8e8e8"
 
@@ -126,7 +131,8 @@ def plot_forecast(preds: pd.DataFrame, images: Path) -> None:
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=4, bbox_to_anchor=(0.5, 1.02), fontsize=8)
     fig.tight_layout(rect=(0, 0, 1, 0.92))
-    fig.savefig(images / "probabilistic_forecast.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(images / "probabilistic_forecast.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -162,7 +168,8 @@ def plot_calibration(metrics: pd.DataFrame, coverage: float, nominal: float, ima
         ax2.spines[side].set_visible(False)
 
     fig.tight_layout()
-    fig.savefig(images / "probabilistic_calibration.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(images / "probabilistic_calibration.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -188,7 +195,8 @@ def plot_newsvendor(summary: pd.DataFrame, images: Path) -> None:
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
     fig.tight_layout()
-    fig.savefig(images / "probabilistic_newsvendor.png", dpi=160, bbox_inches="tight")
+    format_figure(fig)
+    fig.savefig(images / "probabilistic_newsvendor.png", dpi=260, bbox_inches="tight")
     plt.close(fig)
 
 

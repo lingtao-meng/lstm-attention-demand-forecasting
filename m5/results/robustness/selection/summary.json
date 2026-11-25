@@ -485,6 +485,6 @@
       "wins_vs_naive": 5
     }
   },
-  "elapsed_seconds": 76.75683474999096,
+  "elapsed_seconds": 65.80697533406783,
   "comparison_note": "Selection policies can produce different populations. Changes in absolute MAE/cost are not paired improvements on identical item-store samples. Within-policy FVA/cost comparisons use identical test records and independent calibration."
 }
