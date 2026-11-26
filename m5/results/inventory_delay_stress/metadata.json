@@ -1,0 +1,47 @@
+{
+  "trace_sha256": "b6b980b0fd8cd87bae9e1f6b2be4b78a3881ddf363d2afb9bf1bdc927a2e44e0",
+  "seed": 2026112601,
+  "draws_per_fold": 40,
+  "folds": 6,
+  "warmup_weeks": 4,
+  "scenario_late_probabilities": {
+    "on_time": 0.0,
+    "late_10": 0.1,
+    "late_30": 0.3,
+    "late_10_with_disruption": 0.1
+  },
+  "delay_when_late_weeks": 1,
+  "disrupted_order_weeks": [
+    8,
+    15
+  ],
+  "cases": [
+    1,
+    6,
+    12
+  ],
+  "extra_target_weeks": [
+    0.0,
+    0.5
+  ],
+  "service_targets": [
+    0.9,
+    0.93,
+    0.95
+  ],
+  "score_rows_per_policy_and_draw": 13200,
+  "cost_profiles": {
+    "balanced": [
+      0.02,
+      0.3
+    ],
+    "holding_weighted": [
+      0.04,
+      0.15
+    ],
+    "shortage_weighted": [
+      0.01,
+      0.45
+    ]
+  }
+}

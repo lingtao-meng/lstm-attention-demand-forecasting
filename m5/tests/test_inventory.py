@@ -30,6 +30,17 @@ class InventoryTest(unittest.TestCase):
         for key, values in expected.items():
             np.testing.assert_array_equal(result[key].ravel(), values)
 
+    def test_delayed_and_regular_orders_arrive_together_without_losing_units(self):
+        demand = np.array([[5], [5], [5], [5]])
+        target = np.full_like(demand, 10)
+        delays = np.array([[1], [0], [1], [0]])
+        result = simulate_inventory(demand, target, np.array([4]), lead=1, extra_delay=delays)
+        np.testing.assert_array_equal(result["arrivals"].ravel(), [0, 0, 10, 0])
+        np.testing.assert_array_equal(result["closing_pipeline"].ravel(), [6, 10, 0, 5])
+        for invalid in (np.zeros((3, 1), dtype=int), -delays, delays.astype(float)):
+            with self.assertRaises(ValueError):
+                simulate_inventory(demand, target, np.array([4]), lead=1, extra_delay=invalid)
+
     def test_order_precedes_current_week_demand(self):
         actual = np.array([[1], [1], [1], [9]])
         target = np.array([[3], [3], [3], [3]])

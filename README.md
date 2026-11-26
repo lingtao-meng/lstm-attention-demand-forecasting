@@ -32,7 +32,7 @@
 
 M5另有 [六折概率订货回测](m5/PROBABILISTIC_BACKTEST.md)，每折分别重训和校准，同时比较费用、区间覆盖和服务水平。
 
-库存结转和提前期另见 [M5 多周期库存仿真](m5/INVENTORY_REPLAY.md)。
+库存结转和提前期另见 [M5 多周期库存仿真](m5/INVENTORY_REPLAY.md)。 供应延误与箱规的服务取舍见 [库存压力测试](m5/INVENTORY_DELAY_STRESS.md)。
 
 ## 两条分析线分别做什么
 
